@@ -40,15 +40,15 @@ typedef struct _noeud {
   int id;
   point *p;
   espace *es;
-  struct _liste_noeud *nord;
-  struct _liste_noeud *sud;
-  struct _liste_noeud *est;
-  struct _liste_noeud *ouest;
+  struct _liste_noeud *haut;
+  struct _liste_noeud *bas;
+  struct _liste_noeud *droite;
+  struct _liste_noeud *gauche;
 } noeud;
 
 typedef struct _liste_noeud {
   noeud *n;
-  struct liste_noeud *suivant;
+  struct _liste_noeud *suivant;
 } liste_noeud;
 
 /* ************ */
@@ -63,13 +63,15 @@ noeud *initNoeud(int id);
 
 /* LISTE */
 liste_noeud *nouvelleListe();
-void ajouterNoeud(liste_noeud *liste, noeud *n);
+liste_noeud *ajouterNoeud(liste_noeud *liste, noeud *n);
+liste_noeud *supprimerNoeud(liste_noeud *liste, noeud *n);
 
 /* INSERTION */
 /*int maxEspace(espace *es);*/
 int estDansEspace(espace *es, noeud *b);
 espace *decoupe(noeud *a);
 void aleatoireDansEspace (espace *espace, noeud *noeud);
+void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine);
 
 /* MPI */
 int envoyer(int id_recepteur, int type, int message, int id_emetteur);

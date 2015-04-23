@@ -66,10 +66,10 @@ noeud *initNoeud(int id)
      n->es->bp.y = 0;
   }
 
-  n->nord = nouvelleListe();
-  n->sud = nouvelleListe();
-  n->est = nouvelleListe();
-  n->ouest = nouvelleListe();
+  n->haut = nouvelleListe();
+  n->bas = nouvelleListe();
+  n->droite = nouvelleListe();
+  n->gauche = nouvelleListe();
 
   return n;
 }
@@ -86,10 +86,42 @@ liste_noeud *nouvelleListe()
 }
 
 /* Ajoute un noeud dans la liste */
-void ajouterNoeud(liste_noeud *liste, noeud *n)
+liste_noeud *ajouterNoeud(liste_noeud *liste, noeud *n)
 {
-  liste->n = n;
-  liste->suivant = NULL;
+  if (!liste->n)
+    {
+      liste->n = n;
+      return liste;
+    }
+  liste_noeud *l = (liste_noeud *)malloc(sizeof(liste_noeud));
+  l->n = n;
+  l->suivant = liste;
+  
+  return l;
+}
+
+/* Supprimer un noeud dans la liste */
+liste_noeud *supprimerNoeud(liste_noeud *liste, noeud *n)
+{
+  liste_noeud *prec=NULL, *cour=liste;
+  while (cour)
+    {
+      if (cour->n == n)
+	{
+	  if (prec)
+	    {
+	      prec->suivant=cour->suivant;
+	    }
+	  free(cour);
+	  break;
+	}
+      prec = cour;
+      cour = cour->suivant;
+    }
+  
+  if (prec)
+    return liste;
+  return liste->suivant;
 }
 
 /* INSERTION */
@@ -195,7 +227,7 @@ espace *decoupe(noeud *a)
     }
 }
 
-/* Retourne les coordonnées du noeud dans le nouvel espace */
+/* */
 void aleatoireDansEspace (espace *espace, noeud *noeud)
 {
   while (estDansEspace(espace, noeud) == FALSE)
@@ -208,10 +240,76 @@ void aleatoireDansEspace (espace *espace, noeud *noeud)
     }
 }
 
+/*  */
+void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine)
+{
+  /* B est a droite*/
+  if (noeudA->es->a.x == origine->a.x)
+    {
+      noeudB->droite = noeudA->droite;
+      noeudB->gauche = noeudA->gauche;
+      noeudB->haut = noeudA->haut;
+      noeudB->bas = noeudA->bas;
+      ajouterNoeud(noeudB->gauche, noeudA);
+      ajouterNoeud(noeudA->droite, noeudB);
+      while (noeudA->droite != NULL)
+	{
+	  ajouterNoeud(noeudA->droite->n->gauche, noeudB);
+	  noeudA->droite = noeudA->droite->suivant;
+	}
+    }
+  /* B est a gauche*/
+  else if (noeudA->es->a.x > origine->a.x)
+    {
+      
+    }
+  /* B est en bas*/
+  else if (noeudA->es->a.y == origine->a.y)
+    {
+      
+    }
+  /* B est en haut*/
+  else
+    {
+    }
+}
+
+
 /*
 int envoyer(int id_recepteur, int type, void *message, int id_emetteur) {}
 int recevoir(int id_recepteur, int type, int message, int id_emetteur) {}
 */
+
+/***********************************************************************************************/
+/***********************************************************************************************/
+void printListeNoeud(liste_noeud *liste)
+{
+  if (!liste->n)
+    {
+      printf("empty\n");
+    }
+  else
+    {
+      while(liste)
+	{
+	  printf("-> #%d ",liste->n->id);
+	  liste = liste->suivant;
+	}
+      printf("\n");
+    }
+}
+
+void printListe(noeud *noeud)
+{
+  printf("HAUT : ");
+  printListeNoeud(noeud->haut);
+  printf("BAS : ");
+  printListeNoeud(noeud->bas);
+  printf("DROITE : ");
+  printListeNoeud(noeud->droite);
+  printf("GAUCHE : ");
+  printListeNoeud(noeud->gauche);
+}
 
 void printEspace(noeud *noeud)
 {
@@ -237,6 +335,9 @@ int main (int argc, char **argv) {
 
   noeud *a = initNoeud(1);
   noeud *b = initNoeud(2);
+  noeud *c = initNoeud(3);
+  noeud *d = initNoeud(4);
+  noeud *e = initNoeud(5);
 
   //Si b est dans l'espace du BOOTSTRAP
   if (estDansEspace(a->es, b) == TRUE)
@@ -252,6 +353,18 @@ int main (int argc, char **argv) {
     }
   printf("\nA noeud %d de coordonnées (%d, %d)\n", a->id, a->p->x, a->p->y);
   printf("B noeud %d de coordonnées (%d, %d)\n", b->id, b->p->x, b->p->y);
+  
+  a->haut = ajouterNoeud(a->haut, b);
+  a->haut = ajouterNoeud(a->haut, c);
+  a->haut = ajouterNoeud(a->haut, d);
+  a->haut = ajouterNoeud(a->haut, e);
+  
+  printListe(a);
+  a->haut = supprimerNoeud(a->haut, e);
+  printListe(a);
+  a->haut = supprimerNoeud(a->haut, c);
+  printListe(a);
+
 /*
   noeud *c = initNoeud(3); 
   noeud *d = initNoeud(4);
