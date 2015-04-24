@@ -62,7 +62,7 @@ point *alea(int a, int b);
 noeud *initNoeud(int id);
 
 /* LISTE */
-liste_noeud *nouvelleListe();
+liste_noeud *nouvelleListe(noeud *noeud, liste_noeud *l);
 liste_noeud *ajouterNoeud(liste_noeud *liste, noeud *n);
 liste_noeud *supprimerNoeud(liste_noeud *liste, noeud *n);
 
