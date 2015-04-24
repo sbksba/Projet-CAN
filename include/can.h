@@ -8,7 +8,7 @@
 #include <mpi.h>
 
 #define COORD_MIN 0
-#define COORD_MAX 1000
+#define COORD_MAX 10
 
 #define NORD  0
 #define SUD   1

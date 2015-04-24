@@ -53,17 +53,17 @@ noeud *initNoeud(int id)
   n->es = (espace *)malloc(sizeof(espace));
 
   if (id == 1) {
-     n->es->a.x = 0;
-     n->es->a.y = 1000;
+     n->es->a.x = COORD_MIN;
+     n->es->a.y = COORD_MAX;
       
-     n->es->ap.x = 1000;
-     n->es->ap.y = 1000;
+     n->es->ap.x = COORD_MAX;
+     n->es->ap.y = COORD_MAX;
 
-     n->es->b.x = 0;
-     n->es->b.y = 0;
+     n->es->b.x = COORD_MIN;
+     n->es->b.y = COORD_MIN;
 
-     n->es->bp.x = 1000;
-     n->es->bp.y = 0;
+     n->es->bp.x = COORD_MAX;
+     n->es->bp.y = COORD_MIN;
   }
 
   n->haut = nouvelleListe();
@@ -240,28 +240,146 @@ void aleatoireDansEspace (espace *espace, noeud *noeud)
     }
 }
 
-/*  */
+
+int estPointDansSegment(point p, point a, point b) {
+    //Segment vertical
+    if (p.x == a.x && p.x == b.x){
+	if (p.y >= a.y && p.y <= b.y)
+           return TRUE;
+    }
+
+    //Segment horizontal
+    else {  
+       if (p.x >= a.x && p.x <= b.x)
+          return TRUE;
+    }
+    return FALSE;
+}
+
+
+/* Met à jour la liste des noeuds bas du nouveau noeud*/
+
+liste_noeud *estToujoursVoisinB(noeud *ancien, noeud *nouveau) {
+      //Pour tous les voisins bas de l'ancien noeud  
+
+      while(ancien->bas)
+	{
+           if (!(estPointDansSegment(ancien->bas->n->es->a, nouveau->es->b, nouveau->es->bp)
+               && estPointDansSegment(ancien->bas->n->es->ap, nouveau->es->b, nouveau->es->bp))) {
+		//On supprime le noeud qui n'est plus connecté
+
+	        
+		printf("Noeud à supprimer : %d chez : %d\n", nouveau->id, ancien->bas->n->id);
+		supprimerNoeud(ancien->bas->n->haut, nouveau);
+		printf("Suppression de %d\n", ancien->bas->n->id);
+		supprimerNoeud(nouveau->bas, ancien->bas->n);
+		//On supprime le noeud de qui on est plus connecté
+            }
+
+	   ancien->bas = ancien->bas->suivant;
+	}
+
+	return nouveau->bas;
+}
+
+/* Met à jours la liste des noeuds hauts du nouveau noeud */
+liste_noeud *estToujoursVoisinH(noeud *ancien, noeud *nouveau) {
+      //Pour tous les voisins haut de l'ancien noeud
+      while(ancien->haut)
+	{
+
+           if (!(estPointDansSegment(ancien->haut->n->es->b, nouveau->es->a, nouveau->es->ap)
+               && estPointDansSegment(ancien->haut->n->es->bp, nouveau->es->a, nouveau->es->ap))) {
+		//On supprime le noeud qui n'est plus connecté
+		supprimerNoeud(nouveau->haut, ancien->haut->n);
+		//On supprime le noeud de qui on est plus connecté
+		supprimerNoeud(ancien->haut->n->bas, nouveau);
+            }
+
+	   ancien->haut = ancien->haut->suivant;
+	}
+	return nouveau->haut;
+}
+
+
+liste_noeud *estToujoursVoisinD(noeud *ancien, noeud *nouveau) {
+      //Pour tous les voisins droits
+      while(ancien->droite)
+	{
+
+           if (!(estPointDansSegment(ancien->droite->n->es->a, nouveau->es->a, nouveau->es->b)
+               && estPointDansSegment(ancien->droite->n->es->b, nouveau->es->a, nouveau->es->b))) {
+		//On supprime le noeud qui n'est plus connecté
+		supprimerNoeud(nouveau->droite, ancien->droite->n);
+		//On supprime le noeud de qui on est plus connecté
+		supprimerNoeud(ancien->droite->n->gauche, nouveau);
+            }
+
+	   ancien->droite = ancien->droite->suivant;
+	}
+	return nouveau->droite;
+}
+
+
+liste_noeud *estToujoursVoisinG(noeud *ancien, noeud *nouveau) {
+      //Pour tous les voisins gauches
+      while(ancien->gauche)
+	{
+
+           if (!(estPointDansSegment(ancien->gauche->n->es->a, nouveau->es->a, nouveau->es->b)
+               && estPointDansSegment(ancien->gauche->n->es->b, nouveau->es->a, nouveau->es->b))) {
+		//On supprime le noeud qui n'est plus connecté
+		supprimerNoeud(nouveau->gauche, ancien->gauche->n);
+		//On supprime le noeud de qui on est plus connecté
+		supprimerNoeud(ancien->gauche->n->droite, nouveau);
+            }
+
+	   ancien->gauche = ancien->gauche->suivant;
+	}
+	return nouveau->gauche;
+}
+
+/* C'est le noeud qui est dans l'espace qui se découpe qui
+   notifie les autres (noeudA ici) */
 void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine)
 {
   /* B est a droite*/
   if (noeudA->es->a.x == origine->a.x)
     {
       noeudB->droite = noeudA->droite;
-      noeudB->gauche = noeudA->gauche;
       noeudB->haut = noeudA->haut;
       noeudB->bas = noeudA->bas;
       ajouterNoeud(noeudB->gauche, noeudA);
       ajouterNoeud(noeudA->droite, noeudB);
+
+	//Pour tous les voisins droits de A
       while (noeudA->droite != NULL)
 	{
+	  //On ajoute B dans leur liste de voisins gauches
 	  ajouterNoeud(noeudA->droite->n->gauche, noeudB);
 	  noeudA->droite = noeudA->droite->suivant;
+	  //On supprime A de leur liste de voisins gauches
+          supprimerNoeud(noeudB->droite->n->gauche, noeudA);
 	}
     }
   /* B est a gauche*/
   else if (noeudA->es->a.x > origine->a.x)
     {
-      
+      noeudB->gauche = noeudA->gauche;
+      noeudB->haut = noeudA->haut;
+      noeudB->bas = noeudA->bas;
+      ajouterNoeud(noeudB->droite, noeudA);
+      ajouterNoeud(noeudA->gauche, noeudB);
+
+	//Pour tous les voisins gauches de A
+      while (noeudA->gauche != NULL)
+	{
+	  //On ajoute B dans leur liste de voisins droits
+	  ajouterNoeud(noeudA->gauche->n->droite, noeudB);
+	  noeudA->droite = noeudA->droite->suivant;
+	  //On supprime A de leur liste de voisins droits
+          supprimerNoeud(noeudB->gauche->n->droite, noeudA);
+	}
     }
   /* B est en bas*/
   else if (noeudA->es->a.y == origine->a.y)
@@ -275,10 +393,6 @@ void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine)
 }
 
 
-/*
-int envoyer(int id_recepteur, int type, void *message, int id_emetteur) {}
-int recevoir(int id_recepteur, int type, int message, int id_emetteur) {}
-*/
 
 /***********************************************************************************************/
 /***********************************************************************************************/
@@ -339,6 +453,7 @@ int main (int argc, char **argv) {
   noeud *d = initNoeud(4);
   noeud *e = initNoeud(5);
 
+  /*
   //Si b est dans l'espace du BOOTSTRAP
   if (estDansEspace(a->es, b) == TRUE)
     {
@@ -351,20 +466,86 @@ int main (int argc, char **argv) {
       printEspace(b);
       aleatoireDansEspace(newEspace, b);
     }
-  printf("\nA noeud %d de coordonnées (%d, %d)\n", a->id, a->p->x, a->p->y);
-  printf("B noeud %d de coordonnées (%d, %d)\n", b->id, b->p->x, b->p->y);
-  
-  a->haut = ajouterNoeud(a->haut, b);
-  a->haut = ajouterNoeud(a->haut, c);
-  a->haut = ajouterNoeud(a->haut, d);
-  a->haut = ajouterNoeud(a->haut, e);
-  
-  printListe(a);
-  a->haut = supprimerNoeud(a->haut, e);
-  printListe(a);
-  a->haut = supprimerNoeud(a->haut, c);
-  printListe(a);
+  */
 
+  espace *esB = decoupe(a);
+  b = attributionEspace(b, esB);
+  aleatoireDansEspace(esB, b);
+  printf("b : (%d, %d)n",b->p->x, b->p->y);
+  printEspace(b);
+  
+  espace *esC = decoupe(b);
+  c = attributionEspace(c, esC);
+  aleatoireDansEspace(esC, c);
+  
+  espace *esD = decoupe(c);
+  d = attributionEspace(d, esD);
+  aleatoireDansEspace(esD, d);
+  
+  espace *esE = decoupe(b);
+  e = attributionEspace(e, esE);
+  aleatoireDansEspace(esE, e);
+  
+  printEspace(a);
+  printEspace(b);
+  printEspace(c);
+  printEspace(d);
+  printEspace(e);
+
+    printRect(a);
+    printRect(b);
+    printRect(c);
+    printRect(d);
+    printRect(e);
+  a->droite = ajouterNoeud(a->droite, b);
+  a->droite = ajouterNoeud(a->droite, c);
+
+  b->bas = ajouterNoeud(b->bas, c);
+  b->bas = ajouterNoeud(b->bas, d);
+  b->gauche = ajouterNoeud(b->gauche, a);
+
+  c->gauche = ajouterNoeud(c->gauche, a);
+  c->haut = ajouterNoeud(c->haut, b);
+  c->droite = ajouterNoeud(c->droite, d);
+
+  d->haut = ajouterNoeud(d->haut, e); 
+  d->haut = ajouterNoeud(d->haut, b);
+  d->gauche = ajouterNoeud(d->gauche, c);
+ 
+  c->haut = ajouterNoeud(c->haut, e); 
+ 
+  e->droite = b->droite;
+  e->bas = b->bas;
+  e->gauche = b->gauche;
+  e->haut = b->haut;
+  
+
+  printf("\nA noeud %d de coordonnées (%d, %d)\n", a->id, a->p->x, a->p->y);
+  printListe(a);
+  printf("B noeud %d de coordonnées (%d, %d)\n", b->id, b->p->x, b->p->y);
+  printListe(b);
+  printf("C noeud %d de coordonnées (%d, %d)\n", c->id, c->p->x, c->p->y);
+  printListe(c);
+  printf("D noeud %d de coordonnées (%d, %d)\n", d->id, d->p->x, d->p->y);
+  printListe(d);
+  printf("E noeud %d de coordonnées (%d, %d)\n", e->id, e->p->x, e->p->y);
+  printListe(e);
+  
+  e->bas = estToujoursVoisinB(b, e);
+
+  
+  printf("\nA noeud %d de coordonnées (%d, %d)\n", a->id, a->p->x, a->p->y);
+  printListe(a);
+  printf("B noeud %d de coordonnées (%d, %d)\n", b->id, b->p->x, b->p->y);
+ // printListe(b);
+  printf("C noeud %d de coordonnées (%d, %d)\n", c->id, c->p->x, c->p->y);
+  printListe(c);
+  printf("D noeud %d de coordonnées (%d, %d)\n", d->id, d->p->x, d->p->y);
+  printListe(d);
+  printf("E noeud %d de coordonnées (%d, %d)\n", e->id, e->p->x, e->p->y);
+  printListe(e);
+
+ /*printListe(b);*/
 /*
   noeud *c = initNoeud(3); 
   noeud *d = initNoeud(4);
