@@ -518,6 +518,54 @@ void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine)
 }
 
 
+/* ####################################################### */
+/* RECHERCHE */
+/* ####################################################### */
+
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Retourne la direction de déplacement.
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
+int direction(noeud *courant, noeud *recherche)
+{
+  int tab[2];
+  if (courant->p->x < recherche->p->x && courant->droite != NULL)
+    {
+      printf("DROITE\n");
+      tab[0] = DROITE;
+    }
+  else if (courant->p->x > recherche->p->x && courant->gauche != NULL)
+    {
+      printf("GAUCHE\n");
+      tab[0] = GAUCHE;
+    }
+  
+  if (courant->p->y < recherche->p->y && courant->haut != NULL)
+    {
+      printf("HAUT\n");
+      tab[1] = HAUT;
+    }
+  else if (courant->p->y > recherche->p->y && courant->bas != NULL)
+    {
+      printf("BAS\n");
+      tab[1] = BAS;
+    }
+
+  return tab[aleatoire(0,1)];
+}
+
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Retourne TRUE si le noeud a été trouvé.
+ * Retourne FALSE sinon.
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
+int recherche (noeud *noeud)
+{
+  
+  return FALSE;
+}
+
+
 /***********************************************************************************************/
 /* TEST */
 /***********************************************************************************************/
@@ -650,6 +698,8 @@ int main (int argc, char **argv) {
   printf("F noeud %d de coordonnées (%d, %d)\n", f->id, f->p->x, f->p->y);
   printf("G noeud %d de coordonnées (%d, %d)\n\n", g->id, g->p->x, g->p->y);
 
+  printf("DIRECTION : %d\n",direction(a, f));
+  printf("DIRECTION : %d\n",direction(e, f));
       
   /*
   printf("\n");
