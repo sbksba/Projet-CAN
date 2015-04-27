@@ -4,9 +4,14 @@
 /*  PRIMITIVES  */
 /* ************ */
 
+/* ####################################################### */
 /* POINT */
-/* Tire aléatoirement un point entre a et b
-*/
+/* ####################################################### */
+
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ * Tire aléatoirement un point entre min et max 
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ */
 int aleatoire(int min, int max) {
 
  int low_num=0, hi_num=0;
@@ -31,6 +36,11 @@ int aleatoire(int min, int max) {
  return (rand()%(hi_num-low_num)) + low_num;
 }
 
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Retourne un point aux positions tirés 
+ * aléatoirement entre a et b.
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ */
 point *alea(int a, int b)
 {
   point *p = (point *)malloc(sizeof(point));
@@ -41,9 +51,14 @@ point *alea(int a, int b)
  return p;
 }
 
+/* ####################################################### */
 /* NOEUD */
+/* ####################################################### */
 
-/*Initialise un noeud grâce à un identifiant*/
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Initialise un noeud grâce à un identifiant
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
 noeud *initNoeud(int id)
 {
   noeud *n = (noeud *)malloc(sizeof(noeud));
@@ -73,9 +88,14 @@ noeud *initNoeud(int id)
   return n;
 }
 
+/* ####################################################### */
 /* LISTE */
+/* ####################################################### */
 
-/* Initialise une nouvelle liste */
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Initialise une nouvelle liste 
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
 liste_noeud *nouvelleListe(noeud *noeud, liste_noeud *l)
 {
   if (!noeud)
@@ -88,13 +108,19 @@ liste_noeud *nouvelleListe(noeud *noeud, liste_noeud *l)
   return liste;
 }
 
-/* Ajoute un noeud dans la liste */
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Ajoute un noeud dans la liste 
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
 liste_noeud *ajouterNoeud(liste_noeud *liste, noeud *n)
 {
   return nouvelleListe(n, liste);
 }
 
-/* Supprimer un noeud dans la liste */
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Supprimer un noeud dans la liste 
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
 liste_noeud *supprimerNoeud(liste_noeud *liste, noeud *n)
 {
   if (!liste)
@@ -125,7 +151,10 @@ liste_noeud *supprimerNoeud(liste_noeud *liste, noeud *n)
   return liste->suivant;
 }
 
-/* Copie une liste */
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ * Copie une liste 
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
 liste_noeud *copieListe(liste_noeud *liste)
 {
   if (!liste)
@@ -133,9 +162,14 @@ liste_noeud *copieListe(liste_noeud *liste)
   return nouvelleListe(liste->n, copieListe(liste->suivant));
 }
 
+/* ####################################################### */
 /* INSERTION */
+/* ####################################################### */
 
-/* Retourne le sens de decoupe d'un espace */
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Retourne le sens de decoupe d'un espace 
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
 int maxEspace(espace *es)
 {  
   if ((es->ap.x - es->a.x) >= (es->a.y - es->b.y))
@@ -144,10 +178,11 @@ int maxEspace(espace *es)
 	return HORIZONTAL;
 }
 
-/*
-  Renvoie TRUE si b est dans l'espace de a
-  Renvoie FALSE sinon 
-*/
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Renvoie TRUE si b est dans l'espace de a
+ * Renvoie FALSE sinon 
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
 int estDansEspace(espace *es, noeud *b) {
    //Si le point correspondant à b est inclus dans l'espace
    //correspondant à a :
@@ -161,6 +196,11 @@ int estDansEspace(espace *es, noeud *b) {
 	return FALSE;
 }
 
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Retourne l'espace decoupé du noeud en 
+ * paramètre.
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
 espace *decoupe(noeud *a)
 {
   int l,h;
@@ -240,7 +280,13 @@ espace *decoupe(noeud *a)
     }
 }
 
-/* */
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Retourne la position du noeud dans l'espace
+ * en paramètre.
+ * Tant que celui-ci n'est pas dans cet espace
+ * on réitère l'opération.
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
 void aleatoireDansEspace (espace *espace, noeud *noeud)
 {
   while (estDansEspace(espace, noeud) == FALSE)
@@ -254,6 +300,12 @@ void aleatoireDansEspace (espace *espace, noeud *noeud)
     }
 }
 
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Retourne TRUE si le point p est sur le 
+ * segment [a,b].
+ * Sinon retourne FALSE.
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
 int estPointDansSegment(point p, point a, point b) {
     //Segment vertical
     if (p.x == a.x && p.x == b.x)
@@ -274,6 +326,29 @@ int estPointDansSegment(point p, point a, point b) {
     return FALSE;
 }
 
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Retourne TRUE si le segment source [a+1,b-1]
+ * est sur le cible segment [a,b].
+ * Sinon retourne FALSE.
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
+int estDansSegment(noeud *source, noeud *cible, int sens)
+{
+  if (sens == BAS)
+    {
+      if (  source->es->a.x+1 > cible->es->b.x 
+	 && source->es->ap.x-1 < cible->es->bp.x )
+	return TRUE;
+    }
+  else if (sens == HAUT)
+    {
+      if (  source->es->b.x+1 > cible->es->a.x 
+	 && source->es->bp.x-1 < cible->es->ap.x )
+	return TRUE;
+    }
+  return FALSE;
+}
+
 int segment(point testA, point testB, point deb, point fin)
 {
   if (estPointDansSegment(testA, deb, fin) == TRUE ||
@@ -284,7 +359,6 @@ int segment(point testA, point testB, point deb, point fin)
 }
 
 /* Met à jour la liste des noeuds bas du nouveau noeud*/
-
 liste_noeud *estToujoursVoisinB(noeud *ancien, noeud *nouveau) {
       //Pour tous les voisins bas de l'ancien noeud  
 
@@ -417,8 +491,8 @@ void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine)
 }
 
 
-
 /***********************************************************************************************/
+/* TEST */
 /***********************************************************************************************/
 void printListeNoeud(liste_noeud *liste)
 {
@@ -579,6 +653,47 @@ int main (int argc, char **argv) {
   printf("E noeud %d de coordonnées (%d, %d)\n", e->id, e->p->x, e->p->y);
   printListe(e);  
 
+  if (estDansSegment(c, b, BAS) == TRUE) 
+    printf("\nC est un voisin (bas) de B\n");
+  else
+    printf("\nC n'est pas un voisin (bas) de B\n");
+
+  if (estDansSegment(c, e, BAS) == TRUE) 
+    printf("C est un voisin (bas) de E\n");
+  else
+    printf("C n'est pas un voisin (bas) de E\n");
+
+  if (estDansSegment(d, e, BAS) == TRUE) 
+    printf("D est un voisin (bas) de E\n");
+  else
+    printf("D n'est pas un voisin (bas) de E\n");
+    
+  if (estDansSegment(d, b, BAS) == TRUE) 
+    printf("D est un voisin (bas) de B\n");
+  else
+    printf("D n'est pas un voisin (bas) de B\n"); 
+
+  if (estDansSegment(b, c, HAUT) == TRUE) 
+    printf("\nB est un voisin (haut) de C\n");
+  else
+    printf("\nB n'est pas un voisin (haut) de C\n");
+
+  if (estDansSegment(b, d, HAUT) == TRUE) 
+    printf("B est un voisin (haut) de D\n");
+  else
+    printf("B n'est pas un voisin (haut) de D\n");
+    
+  if (estDansSegment(e, c, HAUT) == TRUE) 
+    printf("E est un voisin (haut) de C\n");
+  else
+    printf("E n'est pas un voisin (haut) de C\n");
+  
+  if (estDansSegment(e, d, HAUT) == TRUE) 
+    printf("E est un voisin (haut) de D\n");
+  else
+    printf("E n'est pas un voisin (haut) de D\n");
+
+  /*
   printf("\n");
   printRect(a);
   printRect(b);
@@ -593,7 +708,8 @@ int main (int argc, char **argv) {
   printf("%d %d D\n", d->p->x, d->p->y);
   printf("%d %d E\n", e->p->x, e->p->y);
   printf("%d %d F\n", f->p->x, f->p->y);
-  
+  */
+
   return EXIT_SUCCESS;
 }
 

@@ -10,10 +10,10 @@
 #define COORD_MIN 0
 #define COORD_MAX 10
 
-#define NORD  0
-#define SUD   1
-#define OUEST 2
-#define EST   3
+#define HAUT   0
+#define BAS    1
+#define GAUCHE 2
+#define DROITE 3
 
 #define HORIZONTAL 0
 #define VERTICAL   1
@@ -56,6 +56,7 @@ typedef struct _liste_noeud {
 /* ************ */
 
 /* POINT */
+int aleatoire(int min, int max);
 point *alea(int a, int b);
 
 /* NOEUD */
@@ -65,12 +66,16 @@ noeud *initNoeud(int id);
 liste_noeud *nouvelleListe(noeud *noeud, liste_noeud *l);
 liste_noeud *ajouterNoeud(liste_noeud *liste, noeud *n);
 liste_noeud *supprimerNoeud(liste_noeud *liste, noeud *n);
+liste_noeud *copieListe(liste_noeud *liste);
 
 /* INSERTION */
-/*int maxEspace(espace *es);*/
+int maxEspace(espace *es);
 int estDansEspace(espace *es, noeud *b);
 espace *decoupe(noeud *a);
 void aleatoireDansEspace (espace *espace, noeud *noeud);
+int estPointDansSegment(point p, point a, point b);
+int estDansSegment(noeud *source, noeud *cible, int sens);
+int segment(point testA, point testB, point deb, point fin);
 void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine);
 
 /* MPI */
