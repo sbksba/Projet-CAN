@@ -75,7 +75,6 @@ espace *decoupe(noeud *a);
 void aleatoireDansEspace (espace *espace, noeud *noeud);
 int estPointDansSegment(point p, point a, point b);
 int estDansSegment(noeud *source, noeud *cible, int sens);
-int segment(point testA, point testB, point deb, point fin);
 void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine);
 
 /* MPI */

@@ -326,36 +326,74 @@ int estPointDansSegment(point p, point a, point b) {
     return FALSE;
 }
 
+int appartient(point m, point a, point b)
+{
+  point p1, p2, p3, p4;
+  p1.x = (m.x-a.x); p1.y = (m.y-a.y); /*AM*/
+  p2.x = (b.x-a.x); p2.y = (b.y-a.y); /*AB*/
+  p3.x = (a.x-m.x); p2.y = (a.y-m.y); /*CA*/
+  p4.x = (b.x-m.x); p2.y = (b.y-m.y); /*CB*/
+  int tmp1 = (p1.x * p2.y)-(p2.x * p1.y);
+  int tmp2 = (p3.x * p4.x)-(p3.y * p4.y);
+
+  /* M est sur la droite AB */
+  if (tmp1 == 0)
+    {
+      /* M est sur le segment AB */
+      if (tmp2 <= 0)
+	{
+	  return TRUE;
+	}
+    }
+  return FALSE;
+}
+
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  * Retourne TRUE si le segment source [a+1,b-1]
  * est sur le cible segment [a,b].
+ * Le sens indique la direction testée
+ * exemple : si sens == BAS on teste si la cible
+ * est un voisin bas.
  * Sinon retourne FALSE.
  * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  */
 int estDansSegment(noeud *source, noeud *cible, int sens)
 {
+  point tmp1, tmp2;
   if (sens == BAS)
     {
-      if (  source->es->a.x+1 > cible->es->b.x 
-	 && source->es->ap.x-1 < cible->es->bp.x )
+      tmp1.x = source->es->a.x+1;  tmp1.y = source->es->a.y;
+      tmp2.x = source->es->ap.x-1; tmp2.y = source->es->ap.y;
+      if ( appartient(tmp1, cible->es->b, cible->es->bp) == TRUE
+	 ||appartient(tmp2, cible->es->b, cible->es->bp) == TRUE)
 	return TRUE;
     }
   else if (sens == HAUT)
     {
-      if (  source->es->b.x+1 > cible->es->a.x 
-	 && source->es->bp.x-1 < cible->es->ap.x )
+      tmp1.x = source->es->b.x+1;  tmp1.y = source->es->b.y;
+      tmp2.x = source->es->bp.x-1; tmp2.y = source->es->bp.y;
+      if ( estPointDansSegment(tmp1, cible->es->a, cible->es->ap) == TRUE
+	 ||estPointDansSegment(tmp2, cible->es->a, cible->es->ap) == TRUE)
 	return TRUE;
     }
+  else if (sens == DROITE)
+    {
+      tmp1.x = source->es->ap.x; tmp1.y = source->es->ap.y-1;
+      tmp2.x = source->es->bp.x; tmp2.y = source->es->bp.y+1;
+      if ( estPointDansSegment(tmp1, cible->es->a, cible->es->b) == TRUE
+	 ||estPointDansSegment(tmp2, cible->es->a, cible->es->b) == TRUE)
+	return TRUE;
+    }
+  else if (sens == GAUCHE)
+    {
+      tmp1.y = source->es->b.x+1;  tmp1.y = source->es->b.y;
+      tmp2.y = source->es->bp.x-1; tmp2.y = source->es->bp.y;
+      if ( estPointDansSegment(tmp1, cible->es->a, cible->es->ap) == TRUE
+	 ||estPointDansSegment(tmp2, cible->es->a, cible->es->ap) == TRUE)
+	return TRUE;
+    }
+  
   return FALSE;
-}
-
-int segment(point testA, point testB, point deb, point fin)
-{
-  if (estPointDansSegment(testA, deb, fin) == TRUE ||
-      estPointDansSegment(testB, deb, fin) == TRUE)
-    return TRUE;
-  else
-    return FALSE;
 }
 
 /* Met à jour la liste des noeuds bas du nouveau noeud*/
@@ -544,13 +582,15 @@ int main (int argc, char **argv) {
   noeud *d = initNoeud(4);
   noeud *e = initNoeud(5);
   noeud *f = initNoeud(6);
-  
+  noeud *g = initNoeud(7);
+
   a->p->x = 2; a->p->y = 5;
   b->p->x = 6; b->p->y = 8;
   c->p->x = 6; c->p->y = 3;
   d->p->x = 9; d->p->y = 2;
   e->p->x = 9; e->p->y = 6;
   f->p->x = 8; f->p->y = 9;
+  g->p->x = 8; g->p->y = 6;
   
   espace *esB = decoupe(a);
   b = attributionEspace(b, esB);
@@ -571,6 +611,10 @@ int main (int argc, char **argv) {
   espace *esF = decoupe(e);
   f = attributionEspace(f, esF);
   aleatoireDansEspace(esF, f);
+  
+  espace *esG = decoupe(e);
+  g = attributionEspace(g, esG);
+  aleatoireDansEspace(esG, g);
     
   a->droite = ajouterNoeud(a->droite, b);
   a->droite = ajouterNoeud(a->droite, c);
@@ -607,92 +651,55 @@ int main (int argc, char **argv) {
   printEspace(d);
   printEspace(e);
   printEspace(f);
-
-  if (segment(b->es->a, b->es->b, a->es->ap, a->es->bp) == TRUE)
-    printf("\nB est un voisin (droit) de A\n");
-  else
-    printf("\nB n'est pas un voisin (droit) de A\n");
     
-  if (segment(c->es->a, a->es->ap, a->es->ap, a->es->bp) == TRUE)
-    printf("C est un voisin (droit) de A\n");
-  else
-    printf("C n'est pas un voisin (droit) de A\n");
-      
-  if (segment(a->es->ap, a->es->bp, b->es->a, b->es->b) == TRUE)
-    printf("A est un voisin (gauche) de B\n");
-  else
-    printf("A n'est pas un voisin (gauche) de B\n");
-    
-  if (segment(a->es->ap, a->es->bp, c->es->a, c->es->b) == TRUE)
-    printf("A est un voisin (gauche) de C\n");
-  else
-    printf("A n'est pas un voisin (gauche) de C\n");
-
-  if (segment(d->es->a, d->es->ap, b->es->b, b->es->bp) == TRUE)
-    printf("D est un voisin (bas) de B\n");
-  else
-    {
-      printf("D n'est pas un voisin (bas) de B\n");
-    }
-
-  if (segment(c->es->a, c->es->ap, e->es->b, e->es->bp) == TRUE)
-    printf("C est un voisin (bas) de E\n\n");
-  else
-    printf("C n'est pas un voisin (bas) de E\n\n");
-
-  b->bas = supprimerNoeud(b->bas, d);
-
   printf("\nA noeud %d de coordonnées (%d, %d)\n", a->id, a->p->x, a->p->y);
-  printListe(a);
   printf("B noeud %d de coordonnées (%d, %d)\n", b->id, b->p->x, b->p->y);
-  printListe(b);
   printf("C noeud %d de coordonnées (%d, %d)\n", c->id, c->p->x, c->p->y);
-  printListe(c);
   printf("D noeud %d de coordonnées (%d, %d)\n", d->id, d->p->x, d->p->y);
-  printListe(d);
   printf("E noeud %d de coordonnées (%d, %d)\n", e->id, e->p->x, e->p->y);
-  printListe(e);  
+  printf("F noeud %d de coordonnées (%d, %d)\n", f->id, f->p->x, f->p->y);
+  printf("G noeud %d de coordonnées (%d, %d)\n\n", g->id, g->p->x, g->p->y);
 
-  if (estDansSegment(c, b, BAS) == TRUE) 
-    printf("\nC est un voisin (bas) de B\n");
+  if (estDansSegment(d, e, BAS) == TRUE) 
+    printf("D est un voisin (bas) de E\n");
   else
-    printf("\nC n'est pas un voisin (bas) de B\n");
+    printf("D n'est pas un voisin (bas) de E\n");
+
+  if (estDansSegment(d, g, BAS) == TRUE) 
+    printf("D est un voisin (bas) de G\n");
+  else
+    printf("D n'est pas un voisin (bas) de G\n");
+
+  if (estDansSegment(e, d, HAUT) == TRUE) 
+    printf("E est un voisin (haut) de D\n");
+  else
+    printf("E n'est pas un voisin (haut) de D\n");
+
+  if (estDansSegment(g, d, HAUT) == TRUE) 
+    printf("G est un voisin (haut) de D\n");
+  else
+    printf("G n'est pas un voisin (haut) de D\n");
 
   if (estDansSegment(c, e, BAS) == TRUE) 
     printf("C est un voisin (bas) de E\n");
   else
     printf("C n'est pas un voisin (bas) de E\n");
 
-  if (estDansSegment(d, e, BAS) == TRUE) 
-    printf("D est un voisin (bas) de E\n");
+  if (estDansSegment(c, g, BAS) == TRUE) 
+    printf("C est un voisin (bas) de G\n");
   else
-    printf("D n'est pas un voisin (bas) de E\n");
-    
-  if (estDansSegment(d, b, BAS) == TRUE) 
-    printf("D est un voisin (bas) de B\n");
+    printf("C n'est pas un voisin (bas) de G\n");
+ 
+  if (estDansSegment(c, b, BAS) == TRUE) 
+    printf("C est un voisin (bas) de B\n");
   else
-    printf("D n'est pas un voisin (bas) de B\n"); 
-
-  if (estDansSegment(b, c, HAUT) == TRUE) 
-    printf("\nB est un voisin (haut) de C\n");
-  else
-    printf("\nB n'est pas un voisin (haut) de C\n");
-
+    printf("C n'est pas un voisin (bas) de B\n");
+  
   if (estDansSegment(b, d, HAUT) == TRUE) 
     printf("B est un voisin (haut) de D\n");
   else
     printf("B n'est pas un voisin (haut) de D\n");
-    
-  if (estDansSegment(e, c, HAUT) == TRUE) 
-    printf("E est un voisin (haut) de C\n");
-  else
-    printf("E n'est pas un voisin (haut) de C\n");
   
-  if (estDansSegment(e, d, HAUT) == TRUE) 
-    printf("E est un voisin (haut) de D\n");
-  else
-    printf("E n'est pas un voisin (haut) de D\n");
-
   /*
   printf("\n");
   printRect(a);
@@ -701,6 +708,7 @@ int main (int argc, char **argv) {
   printRect(d);
   printRect(e);
   printRect(f);
+  printRect(g);
 
   printf("%d %d A\n", a->p->x, a->p->y);
   printf("%d %d B\n", b->p->x, b->p->y);
@@ -708,6 +716,7 @@ int main (int argc, char **argv) {
   printf("%d %d D\n", d->p->x, d->p->y);
   printf("%d %d E\n", e->p->x, e->p->y);
   printf("%d %d F\n", f->p->x, f->p->y);
+  printf("%d %d G\n", g->p->x, g->p->y);
   */
 
   return EXIT_SUCCESS;
