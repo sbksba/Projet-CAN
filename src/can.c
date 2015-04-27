@@ -376,54 +376,92 @@ int estDansSegment(noeud *source, noeud *cible, int sens)
   return FALSE;
 }
 
-/* Met à jour la liste des noeuds bas du nouveau noeud*/
-liste_noeud *estToujoursVoisinB(noeud *ancien, noeud *nouveau) {
-  //Pour tous les voisins bas de l'ancien noeud  
-  
-  while(ancien->bas)
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Met à jour la liste des noeuds bas de noeud
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
+liste_noeud *estToujoursVoisinB(noeud *noeud)
+{
+  liste_noeud *liste = copieListe(noeud->bas);
+  //Pour tous les voisins bas de noeud
+  while(liste)
     {
-      if (estDansSegment(ancien->bas->n, nouveau, BAS) == TRUE) {
-	//On supprime le noeud qui n'est plus connecté
-	printf("Noeud à supprimer : %d chez : %d\n", nouveau->id, ancien->bas->n->id);
-	supprimerNoeud(ancien->bas->n->haut, nouveau);
-	
-	printf("Suppression de %d\n", ancien->bas->n->id);
-	supprimerNoeud(nouveau->bas, ancien->bas->n);
-      }
+      if (estDansSegment(liste->n, noeud, BAS) == FALSE)
+	{
+	  //On supprime le noeud qui n'est plus connecté
+	  noeud->bas->n->haut = supprimerNoeud(noeud->bas->n->haut, noeud);
+	  noeud->bas = supprimerNoeud(noeud->bas, liste->n);
+	}
+      liste = liste->suivant;
     }
   
-  ancien->bas = ancien->bas->suivant;
-  return nouveau->bas;
+  return noeud->bas;
 }
 
-/* Met à jours la liste des noeuds hauts du nouveau noeud */
-liste_noeud *estToujoursVoisinH(noeud *ancien, noeud *nouveau) {
-  //Pour tous les voisins haut de l'ancien noeud
-  while(ancien->haut)
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Met à jour la liste des noeuds haut de noeud
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
+liste_noeud *estToujoursVoisinH(noeud *noeud)
+{
+  liste_noeud *liste = copieListe(noeud->haut);
+  //Pour tous les voisins haut de noeud
+  while(liste)
     {
-      
+      if (estDansSegment(liste->n, noeud, HAUT) == FALSE)
+	{
+	  //On supprime le noeud qui n'est plus connecté
+	  noeud->haut->n->bas = supprimerNoeud(noeud->haut->n->bas, noeud);
+	  noeud->haut = supprimerNoeud(noeud->haut, liste->n);
+	}
+      liste = liste->suivant;
     }
-  return nouveau->haut;
+  
+  return noeud->haut;
 }
 
-
-liste_noeud *estToujoursVoisinD(noeud *ancien, noeud *nouveau) {
-  //Pour tous les voisins droits
-  while(ancien->droite)
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Met à jour la liste des noeuds droit de noeud
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
+liste_noeud *estToujoursVoisinD(noeud *noeud)
+{
+  liste_noeud *liste = copieListe(noeud->droite);
+  //Pour tous les voisins droit de noeud
+  while(liste)
     {
-      
+      if (estDansSegment(liste->n, noeud, DROITE) == FALSE)
+	{
+	  //On supprime le noeud qui n'est plus connecté
+	  noeud->droite->n->gauche = supprimerNoeud(noeud->droite->n->gauche, noeud);
+	  noeud->droite = supprimerNoeud(noeud->droite, liste->n);
+	}
+      liste = liste->suivant;
     }
-  return nouveau->droite;
+  
+  return noeud->droite;
 }
 
-
-liste_noeud *estToujoursVoisinG(noeud *ancien, noeud *nouveau) {
-  //Pour tous les voisins gauches
-  while(ancien->gauche)
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Met à jour la liste des noeuds gauche de noeud
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
+liste_noeud *estToujoursVoisinG(noeud *noeud)
+{
+  liste_noeud *liste = copieListe(noeud->gauche);
+  //Pour tous les voisins gauche de noeud
+  while(liste)
     {
-      
+      if (estDansSegment(liste->n, noeud, GAUCHE) == FALSE)
+	{
+	  //On supprime le noeud qui n'est plus connecté
+	  noeud->gauche->n->droite = supprimerNoeud(noeud->gauche->n->droite, noeud);
+	  noeud->gauche = supprimerNoeud(noeud->gauche, liste->n);
+	}
+      liste = liste->suivant;
     }
-  return nouveau->gauche;
+  
+  return noeud->gauche;
 }
 
 /* C'est le noeud qui est dans l'espace qui se découpe qui
@@ -573,7 +611,8 @@ int main (int argc, char **argv) {
   b->bas = ajouterNoeud(b->bas, c);
   b->bas = ajouterNoeud(b->bas, d);
   b->gauche = ajouterNoeud(b->gauche, a);
-  
+  b->droite = ajouterNoeud(b->droite, e);
+
   c->gauche = ajouterNoeud(c->gauche, a);
   c->haut = ajouterNoeud(c->haut, b);
   c->droite = ajouterNoeud(c->droite, d);
@@ -587,7 +626,6 @@ int main (int argc, char **argv) {
   e->bas = copieListe(b->bas);
   e->haut = copieListe(b->haut);
   e->droite = copieListe(b->droite);
-  e->gauche = copieListe(b->gauche);
   e->gauche = ajouterNoeud(e->gauche, b);
   
   f->bas = copieListe(e->bas);
@@ -612,102 +650,7 @@ int main (int argc, char **argv) {
   printf("F noeud %d de coordonnées (%d, %d)\n", f->id, f->p->x, f->p->y);
   printf("G noeud %d de coordonnées (%d, %d)\n\n", g->id, g->p->x, g->p->y);
 
-
-  if (estDansSegment(d, e, BAS) == TRUE)
-    printf("D est un voisin (bas) de E\n");
-  else
-    printf("D n'est pas un voisin (bas) de E\n");
-
-  if (estDansSegment(d, g, BAS) == TRUE)
-    printf("D est un voisin (bas) de G\n");
-  else
-    printf("D n'est pas un voisin (bas) de G\n");
-
-  if (estDansSegment(e, d, HAUT) == TRUE)
-    printf("E est un voisin (haut) de D\n");
-  else
-    printf("E n'est pas un voisin (haut) de D\n");
-
-  if (estDansSegment(g, d, HAUT) == TRUE)
-    printf("G est un voisin (haut) de D\n");
-  else
-    printf("G n'est pas un voisin (haut) de D\n");
-
-  if (estDansSegment(c, e, BAS) == TRUE)
-    printf("C est un voisin (bas) de E\n");
-  else
-    printf("C n'est pas un voisin (bas) de E\n");
-
-  if (estDansSegment(c, g, BAS) == TRUE)
-    printf("C est un voisin (bas) de G\n");
-  else
-    printf("C n'est pas un voisin (bas) de G\n");
-
-  if (estDansSegment(c, b, BAS) == TRUE)
-    printf("C est un voisin (bas) de B\n");
-  else
-    printf("C n'est pas un voisin (bas) de B\n");
-
-  if (estDansSegment(b, d, HAUT) == TRUE)
-    printf("B est un voisin (haut) de D\n");
-  else
-    printf("B n'est pas un voisin (haut) de D\n");
-
-  if (estDansSegment(a, b, GAUCHE) == TRUE)
-    printf("A est un voisin (gauche) de B\n");
-  else
-    printf("A n'est pas un voisin (gauche) de B\n");
-
-  if (estDansSegment(a, c, GAUCHE) == TRUE)
-    printf("A est un voisin (gauche) de C\n");
-  else
-    printf("A n'est pas un voisin (gauche) de C\n");
-
-  if (estDansSegment(b, f, GAUCHE) == TRUE)
-    printf("B est un voisin (gauche) de F\n");
-  else
-    printf("B n'est pas un voisin (gauche) de F\n");
-
-  if (estDansSegment(b, g, GAUCHE) == TRUE)
-    printf("B est un voisin (gauche) de G\n");
-  else
-    printf("B n'est pas un voisin (gauche) de G\n");
-
-  if (estDansSegment(f, b, DROITE) == TRUE)
-    printf("F est un voisin (droite) de B\n");
-  else
-    printf("F n'est pas un voisin (droite) de B\n");
-
-  if (estDansSegment(g, b, DROITE) == TRUE)
-    printf("G est un voisin (droite) de B\n");
-  else
-    printf("G n'est pas un voisin (droite) de B\n");
-
-  if (estDansSegment(e, b, DROITE) == TRUE)
-    printf("E est un voisin (droite) de B\n");
-  else
-    printf("E n'est pas un voisin (droite) de B\n");
-
-  if (estDansSegment(g, e, GAUCHE) == TRUE)
-    printf("G est un voisin (gauche) de E\n");
-  else
-    printf("G n'est pas un voisin (gauche) de E\n");
-
-  if (estDansSegment(e, g, DROITE) == TRUE)
-    printf("E est un voisin (droite) de G\n");
-  else
-    printf("E n'est pas un voisin (droite) de G\n");
-
-  if (estDansSegment(c, a, DROITE) == TRUE)
-    printf("C est un voisin (droite) de A\n");
-  else
-    printf("C n'est pas un voisin (droite) de A\n");
-
-  if (estDansSegment(b, a, DROITE) == TRUE)
-    printf("B est un voisin (droite) de A\n");
-  else
-    printf("B n'est pas un voisin (droite) de A\n");
-  
+      
   /*
   printf("\n");
   printRect(a);
