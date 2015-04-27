@@ -8,7 +8,7 @@
 #include <mpi.h>
 
 #define COORD_MIN 0
-#define COORD_MAX 10
+#define COORD_MAX 20
 
 #define HAUT   0
 #define BAS    1

@@ -226,15 +226,15 @@ espace *decoupe(noeud *a)
 
       if (estDansEspace(droit, a) == TRUE)
 	{
-	  a->es->a.x = a->es->a.x + (l/2);
-	  a->es->b.x = a->es->b.x + (l/2);
+	  a->es->a.x = gauche->ap.x;
+	  a->es->b.x = gauche->bp.x;
 	  free(droit);
 	  return gauche;
 	}
       else
 	{
-	  a->es->ap.x = a->es->a.x + (l/2);
-	  a->es->bp.x = a->es->b.x + (l/2);
+	  a->es->ap.x = droit->a.x;
+	  a->es->bp.x = droit->b.x;
 	  free(gauche);
 	  return droit;
 	}
@@ -378,16 +378,16 @@ int estDansSegment(noeud *source, noeud *cible, int sens)
     }
   else if (sens == DROITE)
     {
-      tmp1.x = source->es->ap.x; tmp1.y = source->es->ap.y-1;
-      tmp2.x = source->es->bp.x; tmp2.y = source->es->bp.y+1;
-      if ( estPointDansSegment(tmp1, cible->es->a, cible->es->b) == TRUE
-	 ||estPointDansSegment(tmp2, cible->es->a, cible->es->b) == TRUE)
+      tmp1.x = source->es->a.x; tmp1.y = source->es->a.y-1;
+      tmp2.x = source->es->b.x; tmp2.y = source->es->b.y+1;
+      if ( estPointDansSegment(tmp1, cible->es->ap, cible->es->bp) == TRUE
+	 ||estPointDansSegment(tmp2, cible->es->ap, cible->es->bp) == TRUE)
 	return TRUE;
     }
   else if (sens == GAUCHE)
     {
-      tmp1.y = source->es->b.x+1;  tmp1.y = source->es->b.y;
-      tmp2.y = source->es->bp.x-1; tmp2.y = source->es->bp.y;
+      tmp1.x = source->es->ap.x; tmp1.y = source->es->ap.y-1;
+      tmp2.x = source->es->bp.x; tmp2.y = source->es->bp.y+1;
       if ( estPointDansSegment(tmp1, cible->es->a, cible->es->ap) == TRUE
 	 ||estPointDansSegment(tmp2, cible->es->a, cible->es->ap) == TRUE)
 	return TRUE;
@@ -584,13 +584,13 @@ int main (int argc, char **argv) {
   noeud *f = initNoeud(6);
   noeud *g = initNoeud(7);
 
-  a->p->x = 2; a->p->y = 5;
-  b->p->x = 6; b->p->y = 8;
-  c->p->x = 6; c->p->y = 3;
-  d->p->x = 9; d->p->y = 2;
-  e->p->x = 9; e->p->y = 6;
-  f->p->x = 8; f->p->y = 9;
-  g->p->x = 8; g->p->y = 6;
+  a->p->x = 2;  a->p->y = 15;
+  b->p->x = 14; b->p->y = 18;
+  c->p->x = 12; c->p->y = 2;
+  d->p->x = 19; d->p->y = 3;
+  e->p->x = 19; e->p->y = 11;
+  f->p->x = 17; f->p->y = 16;
+  g->p->x = 17; g->p->y = 11;
   
   espace *esB = decoupe(a);
   b = attributionEspace(b, esB);
@@ -651,7 +651,8 @@ int main (int argc, char **argv) {
   printEspace(d);
   printEspace(e);
   printEspace(f);
-    
+  printEspace(g);
+
   printf("\nA noeud %d de coordonnées (%d, %d)\n", a->id, a->p->x, a->p->y);
   printf("B noeud %d de coordonnées (%d, %d)\n", b->id, b->p->x, b->p->y);
   printf("C noeud %d de coordonnées (%d, %d)\n", c->id, c->p->x, c->p->y);
@@ -699,7 +700,57 @@ int main (int argc, char **argv) {
     printf("B est un voisin (haut) de D\n");
   else
     printf("B n'est pas un voisin (haut) de D\n");
+
+  if (estDansSegment(a, b, GAUCHE) == TRUE) 
+    printf("A est un voisin (gauche) de B\n");
+  else
+    printf("A n'est pas un voisin (gauche) de B\n");
   
+  if (estDansSegment(a, c, GAUCHE) == TRUE) 
+    printf("A est un voisin (gauche) de C\n");
+  else
+    printf("A n'est pas un voisin (gauche) de C\n");
+
+  if (estDansSegment(b, f, GAUCHE) == TRUE) 
+    printf("B est un voisin (gauche) de F\n");
+  else
+    printf("B n'est pas un voisin (gauche) de F\n");
+
+  if (estDansSegment(b, g, GAUCHE) == TRUE) 
+    printf("B est un voisin (gauche) de G\n");
+  else
+    printf("B n'est pas un voisin (gauche) de G\n");
+
+  if (estDansSegment(f, b, DROITE) == TRUE) 
+    printf("F est un voisin (droite) de B\n");
+  else
+    printf("F n'est pas un voisin (droite) de B\n");
+
+  if (estDansSegment(g, b, DROITE) == TRUE) 
+    printf("G est un voisin (droite) de B\n");
+  else
+    printf("G n'est pas un voisin (droite) de B\n");
+  
+  if (estDansSegment(e, b, DROITE) == TRUE) 
+    printf("E est un voisin (droite) de B\n");
+  else
+    printf("E n'est pas un voisin (droite) de B\n");
+
+  if (estDansSegment(g, e, GAUCHE) == TRUE) 
+    printf("G est un voisin (gauche) de E\n");
+  else
+    printf("G n'est pas un voisin (gauche) de E\n");
+  
+  if (estDansSegment(e, g, DROITE) == TRUE) 
+    printf("E est un voisin (droite) de G\n");
+  else
+    printf("E n'est pas un voisin (droite) de G\n");
+
+  if (estDansSegment(c, a, DROITE) == TRUE) 
+    printf("C est un voisin (droite) de A\n");
+  else
+    printf("C n'est pas un voisin (droite) de A\n");
+
   /*
   printf("\n");
   printRect(a);
