@@ -73,7 +73,7 @@ int maxEspace(espace *es);
 int estDansEspace(espace *es, noeud *b);
 espace *decoupe(noeud *a);
 void aleatoireDansEspace (espace *espace, noeud *noeud);
-int estPointDansSegment(point p, point a, point b);
+int appartient(point m, point a, point b);
 int estDansSegment(noeud *source, noeud *cible, int sens);
 void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine);
 

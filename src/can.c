@@ -301,31 +301,11 @@ void aleatoireDansEspace (espace *espace, noeud *noeud)
 }
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- * Retourne TRUE si le point p est sur le 
+ * Retourne TRUE si le point m est sur le 
  * segment [a,b].
  * Sinon retourne FALSE.
  * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  */
-int estPointDansSegment(point p, point a, point b) {
-    //Segment vertical
-    if (p.x == a.x && p.x == b.x)
-      {
-	if (p.y <= a.y && p.y >= b.y)
-	  {
-	    return TRUE;
-	  }
-      }
-    //Segment horizontal
-    else 
-      { 
-    	if (p.x >= a.x && p.x < b.x)
-	  {
-	    return TRUE;
-	  }
-      }
-    return FALSE;
-}
-
 int appartient(point m, point a, point b)
 {
   point p1, p2, p3, p4;
@@ -349,8 +329,8 @@ int appartient(point m, point a, point b)
 }
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- * Retourne TRUE si le segment source [a+1,b-1]
- * est sur le cible segment [a,b].
+ * Retourne TRUE si le noeud source est sur le 
+ * segment [a,b] du noeud cible.
  * Le sens indique la direction testée
  * exemple : si sens == BAS on teste si la cible
  * est un voisin bas.
@@ -372,24 +352,24 @@ int estDansSegment(noeud *source, noeud *cible, int sens)
     {
       tmp1.x = source->es->b.x+1;  tmp1.y = source->es->b.y;
       tmp2.x = source->es->bp.x-1; tmp2.y = source->es->bp.y;
-      if ( estPointDansSegment(tmp1, cible->es->a, cible->es->ap) == TRUE
-	 ||estPointDansSegment(tmp2, cible->es->a, cible->es->ap) == TRUE)
+      if ( appartient(tmp1, cible->es->a, cible->es->ap) == TRUE
+	 ||appartient(tmp2, cible->es->a, cible->es->ap) == TRUE)
 	return TRUE;
     }
   else if (sens == DROITE)
     {
       tmp1.x = source->es->a.x; tmp1.y = source->es->a.y-1;
       tmp2.x = source->es->b.x; tmp2.y = source->es->b.y+1;
-      if ( estPointDansSegment(tmp1, cible->es->ap, cible->es->bp) == TRUE
-	 ||estPointDansSegment(tmp2, cible->es->ap, cible->es->bp) == TRUE)
+      if ( appartient(tmp1, cible->es->ap, cible->es->bp) == TRUE
+	 ||appartient(tmp2, cible->es->ap, cible->es->bp) == TRUE)
 	return TRUE;
     }
   else if (sens == GAUCHE)
     {
       tmp1.x = source->es->ap.x; tmp1.y = source->es->ap.y-1;
       tmp2.x = source->es->bp.x; tmp2.y = source->es->bp.y+1;
-      if ( estPointDansSegment(tmp1, cible->es->a, cible->es->ap) == TRUE
-	 ||estPointDansSegment(tmp2, cible->es->a, cible->es->ap) == TRUE)
+      if ( appartient(tmp1, cible->es->a, cible->es->b) == TRUE
+	 ||appartient(tmp2, cible->es->a, cible->es->b) == TRUE)
 	return TRUE;
     }
   
@@ -398,81 +378,52 @@ int estDansSegment(noeud *source, noeud *cible, int sens)
 
 /* Met à jour la liste des noeuds bas du nouveau noeud*/
 liste_noeud *estToujoursVoisinB(noeud *ancien, noeud *nouveau) {
-      //Pour tous les voisins bas de l'ancien noeud  
-
-      while(ancien->bas)
-	{
-           if (!(estPointDansSegment(ancien->bas->n->es->a, nouveau->es->b, nouveau->es->bp)
-		 && estPointDansSegment(ancien->bas->n->es->ap, nouveau->es->b, nouveau->es->bp))) {
-		//On supprime le noeud qui n'est plus connecté
-		printf("Noeud à supprimer : %d chez : %d\n", nouveau->id, ancien->bas->n->id);
-		supprimerNoeud(ancien->bas->n->haut, nouveau);
-		
-		printf("Suppression de %d\n", ancien->bas->n->id);
-		supprimerNoeud(nouveau->bas, ancien->bas->n);
-	   }
-
-	   ancien->bas = ancien->bas->suivant;
-	}
-
-	return nouveau->bas;
+  //Pour tous les voisins bas de l'ancien noeud  
+  
+  while(ancien->bas)
+    {
+      if (estDansSegment(ancien->bas->n, nouveau, BAS) == TRUE) {
+	//On supprime le noeud qui n'est plus connecté
+	printf("Noeud à supprimer : %d chez : %d\n", nouveau->id, ancien->bas->n->id);
+	supprimerNoeud(ancien->bas->n->haut, nouveau);
+	
+	printf("Suppression de %d\n", ancien->bas->n->id);
+	supprimerNoeud(nouveau->bas, ancien->bas->n);
+      }
+    }
+  
+  ancien->bas = ancien->bas->suivant;
+  return nouveau->bas;
 }
 
 /* Met à jours la liste des noeuds hauts du nouveau noeud */
 liste_noeud *estToujoursVoisinH(noeud *ancien, noeud *nouveau) {
-      //Pour tous les voisins haut de l'ancien noeud
-      while(ancien->haut)
-	{
-
-           if (!(estPointDansSegment(ancien->haut->n->es->b, nouveau->es->a, nouveau->es->ap)
-               && estPointDansSegment(ancien->haut->n->es->bp, nouveau->es->a, nouveau->es->ap))) {
-		//On supprime le noeud qui n'est plus connecté
-		supprimerNoeud(nouveau->haut, ancien->haut->n);
-		//On supprime le noeud de qui on est plus connecté
-		supprimerNoeud(ancien->haut->n->bas, nouveau);
-            }
-
-	   ancien->haut = ancien->haut->suivant;
-	}
-	return nouveau->haut;
+  //Pour tous les voisins haut de l'ancien noeud
+  while(ancien->haut)
+    {
+      
+    }
+  return nouveau->haut;
 }
 
 
 liste_noeud *estToujoursVoisinD(noeud *ancien, noeud *nouveau) {
-      //Pour tous les voisins droits
-      while(ancien->droite)
-	{
-
-           if (!(estPointDansSegment(ancien->droite->n->es->a, nouveau->es->a, nouveau->es->b)
-               && estPointDansSegment(ancien->droite->n->es->b, nouveau->es->a, nouveau->es->b))) {
-		//On supprime le noeud qui n'est plus connecté
-		supprimerNoeud(nouveau->droite, ancien->droite->n);
-		//On supprime le noeud de qui on est plus connecté
-		supprimerNoeud(ancien->droite->n->gauche, nouveau);
-            }
-
-	   ancien->droite = ancien->droite->suivant;
-	}
-	return nouveau->droite;
+  //Pour tous les voisins droits
+  while(ancien->droite)
+    {
+      
+    }
+  return nouveau->droite;
 }
 
 
 liste_noeud *estToujoursVoisinG(noeud *ancien, noeud *nouveau) {
-      //Pour tous les voisins gauches
-      while(ancien->gauche)
-	{
-
-           if (!(estPointDansSegment(ancien->gauche->n->es->a, nouveau->es->a, nouveau->es->b)
-               && estPointDansSegment(ancien->gauche->n->es->b, nouveau->es->a, nouveau->es->b))) {
-		//On supprime le noeud qui n'est plus connecté
-		supprimerNoeud(nouveau->gauche, ancien->gauche->n);
-		//On supprime le noeud de qui on est plus connecté
-		supprimerNoeud(ancien->gauche->n->droite, nouveau);
-            }
-
-	   ancien->gauche = ancien->gauche->suivant;
-	}
-	return nouveau->gauche;
+  //Pour tous les voisins gauches
+  while(ancien->gauche)
+    {
+      
+    }
+  return nouveau->gauche;
 }
 
 /* C'est le noeud qui est dans l'espace qui se découpe qui
@@ -661,96 +612,102 @@ int main (int argc, char **argv) {
   printf("F noeud %d de coordonnées (%d, %d)\n", f->id, f->p->x, f->p->y);
   printf("G noeud %d de coordonnées (%d, %d)\n\n", g->id, g->p->x, g->p->y);
 
-  if (estDansSegment(d, e, BAS) == TRUE) 
+
+  if (estDansSegment(d, e, BAS) == TRUE)
     printf("D est un voisin (bas) de E\n");
   else
     printf("D n'est pas un voisin (bas) de E\n");
 
-  if (estDansSegment(d, g, BAS) == TRUE) 
+  if (estDansSegment(d, g, BAS) == TRUE)
     printf("D est un voisin (bas) de G\n");
   else
     printf("D n'est pas un voisin (bas) de G\n");
 
-  if (estDansSegment(e, d, HAUT) == TRUE) 
+  if (estDansSegment(e, d, HAUT) == TRUE)
     printf("E est un voisin (haut) de D\n");
   else
     printf("E n'est pas un voisin (haut) de D\n");
 
-  if (estDansSegment(g, d, HAUT) == TRUE) 
+  if (estDansSegment(g, d, HAUT) == TRUE)
     printf("G est un voisin (haut) de D\n");
   else
     printf("G n'est pas un voisin (haut) de D\n");
 
-  if (estDansSegment(c, e, BAS) == TRUE) 
+  if (estDansSegment(c, e, BAS) == TRUE)
     printf("C est un voisin (bas) de E\n");
   else
     printf("C n'est pas un voisin (bas) de E\n");
 
-  if (estDansSegment(c, g, BAS) == TRUE) 
+  if (estDansSegment(c, g, BAS) == TRUE)
     printf("C est un voisin (bas) de G\n");
   else
     printf("C n'est pas un voisin (bas) de G\n");
- 
-  if (estDansSegment(c, b, BAS) == TRUE) 
+
+  if (estDansSegment(c, b, BAS) == TRUE)
     printf("C est un voisin (bas) de B\n");
   else
     printf("C n'est pas un voisin (bas) de B\n");
-  
-  if (estDansSegment(b, d, HAUT) == TRUE) 
+
+  if (estDansSegment(b, d, HAUT) == TRUE)
     printf("B est un voisin (haut) de D\n");
   else
     printf("B n'est pas un voisin (haut) de D\n");
 
-  if (estDansSegment(a, b, GAUCHE) == TRUE) 
+  if (estDansSegment(a, b, GAUCHE) == TRUE)
     printf("A est un voisin (gauche) de B\n");
   else
     printf("A n'est pas un voisin (gauche) de B\n");
-  
-  if (estDansSegment(a, c, GAUCHE) == TRUE) 
+
+  if (estDansSegment(a, c, GAUCHE) == TRUE)
     printf("A est un voisin (gauche) de C\n");
   else
     printf("A n'est pas un voisin (gauche) de C\n");
 
-  if (estDansSegment(b, f, GAUCHE) == TRUE) 
+  if (estDansSegment(b, f, GAUCHE) == TRUE)
     printf("B est un voisin (gauche) de F\n");
   else
     printf("B n'est pas un voisin (gauche) de F\n");
 
-  if (estDansSegment(b, g, GAUCHE) == TRUE) 
+  if (estDansSegment(b, g, GAUCHE) == TRUE)
     printf("B est un voisin (gauche) de G\n");
   else
     printf("B n'est pas un voisin (gauche) de G\n");
 
-  if (estDansSegment(f, b, DROITE) == TRUE) 
+  if (estDansSegment(f, b, DROITE) == TRUE)
     printf("F est un voisin (droite) de B\n");
   else
     printf("F n'est pas un voisin (droite) de B\n");
 
-  if (estDansSegment(g, b, DROITE) == TRUE) 
+  if (estDansSegment(g, b, DROITE) == TRUE)
     printf("G est un voisin (droite) de B\n");
   else
     printf("G n'est pas un voisin (droite) de B\n");
-  
-  if (estDansSegment(e, b, DROITE) == TRUE) 
+
+  if (estDansSegment(e, b, DROITE) == TRUE)
     printf("E est un voisin (droite) de B\n");
   else
     printf("E n'est pas un voisin (droite) de B\n");
 
-  if (estDansSegment(g, e, GAUCHE) == TRUE) 
+  if (estDansSegment(g, e, GAUCHE) == TRUE)
     printf("G est un voisin (gauche) de E\n");
   else
     printf("G n'est pas un voisin (gauche) de E\n");
-  
-  if (estDansSegment(e, g, DROITE) == TRUE) 
+
+  if (estDansSegment(e, g, DROITE) == TRUE)
     printf("E est un voisin (droite) de G\n");
   else
     printf("E n'est pas un voisin (droite) de G\n");
 
-  if (estDansSegment(c, a, DROITE) == TRUE) 
+  if (estDansSegment(c, a, DROITE) == TRUE)
     printf("C est un voisin (droite) de A\n");
   else
     printf("C n'est pas un voisin (droite) de A\n");
 
+  if (estDansSegment(b, a, DROITE) == TRUE)
+    printf("B est un voisin (droite) de A\n");
+  else
+    printf("B n'est pas un voisin (droite) de A\n");
+  
   /*
   printf("\n");
   printRect(a);
