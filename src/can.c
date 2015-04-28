@@ -14,9 +14,9 @@
  */
 int aleatoire(int min, int max) {
 
- int low_num=0, hi_num=0;
+  int low_num=0, hi_num=0;
 
- if(min < max)
+  if(min < max)
     {
       low_num = min;
       hi_num = max +1;
@@ -27,13 +27,13 @@ int aleatoire(int min, int max) {
       hi_num = min;
     }
 
- struct timespec ts;
- clock_gettime(CLOCK_MONOTONIC, &ts);
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
 
- /* using nano-seconds instead of seconds */
- srand((time_t)ts.tv_nsec);
+  /* using nano-seconds instead of seconds */
+  srand((time_t)ts.tv_nsec);
 
- return (rand()%(hi_num-low_num)) + low_num;
+  return (rand()%(hi_num-low_num)) + low_num;
 }
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -48,7 +48,7 @@ point *alea(int a, int b)
   p->x = aleatoire(a ,b);
   p->y = aleatoire(a ,b);
 
- return p;
+  return p;
 }
 
 /* ####################################################### */
@@ -67,17 +67,17 @@ noeud *initNoeud(int id)
   n->es = (espace *)malloc(sizeof(espace));
 
   if (id == 1) {
-     n->es->a.x = COORD_MIN;
-     n->es->a.y = COORD_MAX;
+    n->es->a.x = COORD_MIN;
+    n->es->a.y = COORD_MAX;
       
-     n->es->ap.x = COORD_MAX;
-     n->es->ap.y = COORD_MAX;
+    n->es->ap.x = COORD_MAX;
+    n->es->ap.y = COORD_MAX;
 
-     n->es->b.x = COORD_MIN;
-     n->es->b.y = COORD_MIN;
+    n->es->b.x = COORD_MIN;
+    n->es->b.y = COORD_MIN;
 
-     n->es->bp.x = COORD_MAX;
-     n->es->bp.y = COORD_MIN;
+    n->es->bp.x = COORD_MAX;
+    n->es->bp.y = COORD_MIN;
   }
 
   n->haut = NULL;
@@ -162,6 +162,19 @@ liste_noeud *copieListe(liste_noeud *liste)
   return nouvelleListe(liste->n, copieListe(liste->suivant));
 }
 
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ * Retourne un liste vide. 
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
+void supprimerListe(liste_noeud *liste)
+{
+  if (liste)
+    {
+      supprimerListe(liste->suivant);
+      free(liste);
+    }  
+}
+
 /* ####################################################### */
 /* INSERTION */
 /* ####################################################### */
@@ -173,9 +186,9 @@ liste_noeud *copieListe(liste_noeud *liste)
 int maxEspace(espace *es)
 {  
   if ((es->ap.x - es->a.x) >= (es->a.y - es->b.y))
-	return VERTICAL;
-    else
-	return HORIZONTAL;
+    return VERTICAL;
+  else
+    return HORIZONTAL;
 }
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,16 +197,30 @@ int maxEspace(espace *es)
  * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  */
 int estDansEspace(espace *es, noeud *b) {
-   //Si le point correspondant à b est inclus dans l'espace
-   //correspondant à a :
+  //Si le point correspondant à b est inclus dans l'espace
+  //correspondant à a :
  
-   if ((es->a.x < b->p->x) && (b->p->x < es->ap.x)
-    && (es->b.x < b->p->x) && (b->p->x < es->bp.x)
-    && (es->a.y > b->p->y) && (b->p->y < es->ap.y)
-    && (es->b.y < b->p->y) && (b->p->y > es->bp.y))
-	return TRUE;
-   else
-	return FALSE;
+  if ((es->a.x < b->p->x) && (b->p->x < es->ap.x)
+      && (es->b.x < b->p->x) && (b->p->x < es->bp.x)
+      && (es->a.y > b->p->y) && (b->p->y < es->ap.y)
+      && (es->b.y < b->p->y) && (b->p->y > es->bp.y))
+    return TRUE;
+  else
+    return FALSE;
+}
+
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Attribut a un noeud son espace. 
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
+noeud *attributionEspace(noeud *noeud, espace *espace)
+{
+  noeud->es->a = espace->a;
+  noeud->es->ap = espace->ap;
+  noeud->es->b = espace->b;
+  noeud->es->bp = espace->bp;
+
+  return noeud;
 }
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -345,7 +372,7 @@ int estDansSegment(noeud *source, noeud *cible, int sens)
       tmp1.x = source->es->a.x+1;  tmp1.y = source->es->a.y;
       tmp2.x = source->es->ap.x-1; tmp2.y = source->es->ap.y;
       if ( appartient(tmp1, cible->es->b, cible->es->bp) == TRUE
-	 ||appartient(tmp2, cible->es->b, cible->es->bp) == TRUE)
+	   ||appartient(tmp2, cible->es->b, cible->es->bp) == TRUE)
 	return TRUE;
     }
   else if (sens == HAUT)
@@ -353,7 +380,7 @@ int estDansSegment(noeud *source, noeud *cible, int sens)
       tmp1.x = source->es->b.x+1;  tmp1.y = source->es->b.y;
       tmp2.x = source->es->bp.x-1; tmp2.y = source->es->bp.y;
       if ( appartient(tmp1, cible->es->a, cible->es->ap) == TRUE
-	 ||appartient(tmp2, cible->es->a, cible->es->ap) == TRUE)
+	   ||appartient(tmp2, cible->es->a, cible->es->ap) == TRUE)
 	return TRUE;
     }
   else if (sens == DROITE)
@@ -361,7 +388,7 @@ int estDansSegment(noeud *source, noeud *cible, int sens)
       tmp1.x = source->es->a.x; tmp1.y = source->es->a.y-1;
       tmp2.x = source->es->b.x; tmp2.y = source->es->b.y+1;
       if ( appartient(tmp1, cible->es->ap, cible->es->bp) == TRUE
-	 ||appartient(tmp2, cible->es->ap, cible->es->bp) == TRUE)
+	   ||appartient(tmp2, cible->es->ap, cible->es->bp) == TRUE)
 	return TRUE;
     }
   else if (sens == GAUCHE)
@@ -369,7 +396,7 @@ int estDansSegment(noeud *source, noeud *cible, int sens)
       tmp1.x = source->es->ap.x; tmp1.y = source->es->ap.y-1;
       tmp2.x = source->es->bp.x; tmp2.y = source->es->bp.y+1;
       if ( appartient(tmp1, cible->es->a, cible->es->b) == TRUE
-	 ||appartient(tmp2, cible->es->a, cible->es->b) == TRUE)
+	   ||appartient(tmp2, cible->es->a, cible->es->b) == TRUE)
 	return TRUE;
     }
   
@@ -477,7 +504,7 @@ void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine)
       ajouterNoeud(noeudB->gauche, noeudA);
       ajouterNoeud(noeudA->droite, noeudB);
 
-	//Pour tous les voisins droits de A
+      //Pour tous les voisins droits de A
       while (noeudA->droite != NULL)
 	{
 	  //On ajoute B dans leur liste de voisins gauches
@@ -496,7 +523,7 @@ void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine)
       ajouterNoeud(noeudB->droite, noeudA);
       ajouterNoeud(noeudA->gauche, noeudB);
 
-	//Pour tous les voisins gauches de A
+      //Pour tous les voisins gauches de A
       while (noeudA->gauche != NULL)
 	{
 	  //On ajoute B dans leur liste de voisins droits
@@ -517,6 +544,144 @@ void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine)
     }
 }
 
+void maj(noeud *maj)
+{
+  maj->bas    = estToujoursVoisinB(maj);
+  maj->haut   = estToujoursVoisinH(maj);
+  maj->droite = estToujoursVoisinD(maj);
+  maj->gauche = estToujoursVoisinG(maj);;
+}
+
+void insertD(noeud *cible, noeud *insert)
+{
+  printf("insertD\n");
+  insert->gauche = ajouterNoeud(insert->gauche, cible);
+  insert->droite = copieListe(cible->droite);
+  insert->haut = copieListe(cible->haut);
+  insert->bas = copieListe(cible->bas);
+   
+  supprimerListe(cible->droite);
+  cible->droite = ajouterNoeud(cible->droite, insert);
+  
+  if (cible->gauche != NULL)
+    {
+      printf("#%d\n", cible->gauche->n->id);
+      printf("Ajout de %d dans %d\n",insert->id, cible->gauche->n->id);
+    }
+}
+
+void insertG(noeud *cible, noeud *insert)
+{
+  printf("insertG\n");
+  insert->gauche = copieListe(cible->gauche);
+  insert->droite = ajouterNoeud(insert->droite, cible);
+  insert->haut = copieListe(cible->haut);
+  insert->bas = copieListe(cible->bas);
+
+  supprimerListe(cible->gauche);
+  cible->gauche = ajouterNoeud(cible->gauche, insert);
+
+  if (cible->droite != NULL)
+    {
+      printf("#%d\n", cible->droite->n->id);
+      printf("Ajout de %d dans %d\n",insert->id, cible->droite->n->id);
+    }
+
+  //ajoutVoisin(cible, insert);
+}
+
+void insertH(noeud *cible, noeud *insert)
+{
+  printf("insertH\n");
+  insert->gauche = copieListe(cible->gauche);
+  insert->droite = copieListe(cible->droite);
+  insert->haut = copieListe(cible->haut);
+  insert->bas = ajouterNoeud(insert->bas, cible);
+
+  supprimerListe(cible->haut);
+  cible->haut = ajouterNoeud(cible->haut, insert);
+ 
+  if (cible->bas != NULL)
+    {
+      printf("#%d\n", cible->bas->n->id);
+      printf("Ajout de %d dans %d\n",insert->id, cible->bas->n->id);
+    }  
+}
+
+void insertB(noeud *cible, noeud *insert)
+{
+  printf("insertB\n");
+  insert->gauche = copieListe(cible->gauche);
+  insert->droite = copieListe(cible->droite);
+  insert->haut = ajouterNoeud(insert->haut, cible);
+  insert->bas = copieListe(cible->bas);
+  
+  supprimerListe(cible->bas);
+  cible->bas = ajouterNoeud(cible->bas, insert);
+ 
+  if (cible->haut != NULL && insert->id != cible->haut->n->id)
+    {
+      printf("#%d\n", cible->haut->n->id);
+      printf("Ajout de %d dans %d\n",insert->id, cible->haut->n->id);
+    }
+
+  if (cible->bas != NULL && insert->id != cible->bas->n->id)
+    {
+      printf("#%d\n", cible->bas->n->id);
+      printf("Ajout de %d dans %d\n",insert->id, cible->bas->n->id);
+    }
+
+  if (cible->droite != NULL && insert->id != cible->droite->n->id)
+    {
+      printf("#%d\n", cible->droite->n->id);
+      printf("Ajout de %d dans %d\n",insert->id, cible->droite->n->id);
+    }
+
+  if (cible->gauche != NULL && insert->id != cible->gauche->n->id)
+    {
+      printf("#%d\n", cible->gauche->n->id);
+      printf("Ajout de %d dans %d\n",insert->id, cible->gauche->n->id);
+    }
+  
+  //ajoutVoisin(cible, insert);
+}
+
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ * Insert un noeud dans la zone du noeud cible.
+ * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ */
+void insertion(noeud *cible, noeud *insert, int dir)
+{
+  espace *esNoeud = decoupe(cible);
+  insert = attributionEspace(insert, esNoeud);
+  aleatoireDansEspace(esNoeud, insert);
+  
+  printf("dir : %d\n",dir);
+  
+  switch(dir)
+    {
+    case DROITE:
+      /* Insertion du noeud a la droite de la cible */
+      insertD(cible, insert);
+      maj(cible); maj(insert);
+      break;
+    case GAUCHE:
+      /* Insertion du noeud a la gauche de la cible */
+      insertG(cible, insert);
+      maj(cible); maj(insert);
+      break;
+    case HAUT:
+      /* Insertion du noeud en haut de la cible */
+      insertH(cible, insert);
+      maj(cible); maj(insert);
+      break;
+    case BAS:
+      /* Insertion du noeud en bas de la cible */
+      insertB(cible, insert);
+      maj(cible); maj(insert);
+      break;
+    }
+}
 
 /* ####################################################### */
 /* RECHERCHE */
@@ -531,23 +696,19 @@ int direction(noeud *courant, noeud *recherche)
   int tab[2];
   if (courant->p->x < recherche->p->x && courant->droite != NULL)
     {
-      printf("DROITE\n");
       tab[0] = DROITE;
     }
   else if (courant->p->x > recherche->p->x && courant->gauche != NULL)
     {
-      printf("GAUCHE\n");
       tab[0] = GAUCHE;
     }
   
   if (courant->p->y < recherche->p->y && courant->haut != NULL)
     {
-      printf("HAUT\n");
       tab[1] = HAUT;
     }
   else if (courant->p->y > recherche->p->y && courant->bas != NULL)
     {
-      printf("BAS\n");
       tab[1] = BAS;
     }
 
@@ -589,6 +750,7 @@ void printListe(noeud *noeud)
   printListeNoeud(noeud->droite);
   printf("GAUCHE : ");
   printListeNoeud(noeud->gauche);
+  printf("\n");
 }
 
 void printEspace(noeud *noeud)
@@ -596,15 +758,6 @@ void printEspace(noeud *noeud)
   printf("#%d   [ (%d,%d) (%d,%d) (%d,%d) (%d,%d) ]\n",noeud->id,noeud->es->a.x,noeud->es->a.y,noeud->es->ap.x,noeud->es->ap.y,noeud->es->b.x,noeud->es->b.y,noeud->es->bp.x,noeud->es->bp.y);
 }
 
-noeud *attributionEspace(noeud *noeud, espace *espace)
-{
-  noeud->es->a = espace->a;
-  noeud->es->ap = espace->ap;
-  noeud->es->b = espace->b;
-  noeud->es->bp = espace->bp;
-
-  return noeud;
-}
 
 void printRect(noeud *noeud)
 {
@@ -629,79 +782,41 @@ int main (int argc, char **argv) {
   f->p->x = 17; f->p->y = 16;
   g->p->x = 17; g->p->y = 11;
   
-  espace *esB = decoupe(a);
-  b = attributionEspace(b, esB);
-  aleatoireDansEspace(esB, b);
+  insertion(a,b, DROITE);
+  insertion(b,c, BAS);
+  insertion(c,d, DROITE);
 
-  espace *esC = decoupe(b);
-  c = attributionEspace(c, esC);
-  aleatoireDansEspace(esC, c);
+  /*
+  insertion(b,e, DROITE);
+  insertion(e,f, HAUT);
+  insertion(e,g, GAUCHE);
+  */
   
-  espace *esD = decoupe(c);
-  d = attributionEspace(d, esD);
-  aleatoireDansEspace(esD, d);
-  
-  espace *esE = decoupe(b);
-  e = attributionEspace(e, esE);
-  aleatoireDansEspace(esE, e);
-
-  espace *esF = decoupe(e);
-  f = attributionEspace(f, esF);
-  aleatoireDansEspace(esF, f);
-  
-  espace *esG = decoupe(e);
-  g = attributionEspace(g, esG);
-  aleatoireDansEspace(esG, g);
-    
-  a->droite = ajouterNoeud(a->droite, b);
-  a->droite = ajouterNoeud(a->droite, c);
-  
-  b->bas = ajouterNoeud(b->bas, c);
-  b->bas = ajouterNoeud(b->bas, d);
-  b->gauche = ajouterNoeud(b->gauche, a);
-  b->droite = ajouterNoeud(b->droite, e);
-
-  c->gauche = ajouterNoeud(c->gauche, a);
-  c->haut = ajouterNoeud(c->haut, b);
-  c->droite = ajouterNoeud(c->droite, d);
-
-  d->haut = ajouterNoeud(d->haut, e);
-  d->haut = ajouterNoeud(d->haut, b);
-  d->gauche = ajouterNoeud(d->gauche, c);
- 
-  c->haut = ajouterNoeud(c->haut, e); 
- 
-  e->bas = copieListe(b->bas);
-  e->haut = copieListe(b->haut);
-  e->droite = copieListe(b->droite);
-  e->gauche = ajouterNoeud(e->gauche, b);
-  
-  f->bas = copieListe(e->bas);
-  f->haut = copieListe(e->haut);
-  f->droite = copieListe(e->droite);
-  f->gauche = copieListe(e->gauche);
-  f->bas = ajouterNoeud(f->bas, e);
-
   printEspace(a);
   printEspace(b);
   printEspace(c);
   printEspace(d);
+  
+  /*
   printEspace(e);
   printEspace(f);
   printEspace(g);
-
+  */
+  
   printf("\nA noeud %d de coordonnées (%d, %d)\n", a->id, a->p->x, a->p->y);
+  printListe(a);
   printf("B noeud %d de coordonnées (%d, %d)\n", b->id, b->p->x, b->p->y);
+  printListe(b);
   printf("C noeud %d de coordonnées (%d, %d)\n", c->id, c->p->x, c->p->y);
+  printListe(c);
   printf("D noeud %d de coordonnées (%d, %d)\n", d->id, d->p->x, d->p->y);
+  printListe(d);
+  
+  /*
   printf("E noeud %d de coordonnées (%d, %d)\n", e->id, e->p->x, e->p->y);
   printf("F noeud %d de coordonnées (%d, %d)\n", f->id, f->p->x, f->p->y);
   printf("G noeud %d de coordonnées (%d, %d)\n\n", g->id, g->p->x, g->p->y);
-
-  printf("DIRECTION : %d\n",direction(a, f));
-  printf("DIRECTION : %d\n",direction(e, f));
-      
-  /*
+  
   printf("\n");
   printRect(a);
   printRect(b);
@@ -710,7 +825,7 @@ int main (int argc, char **argv) {
   printRect(e);
   printRect(f);
   printRect(g);
-
+  
   printf("%d %d A\n", a->p->x, a->p->y);
   printf("%d %d B\n", b->p->x, b->p->y);
   printf("%d %d C\n", c->p->x, c->p->y);
@@ -719,7 +834,6 @@ int main (int argc, char **argv) {
   printf("%d %d F\n", f->p->x, f->p->y);
   printf("%d %d G\n", g->p->x, g->p->y);
   */
-
   return EXIT_SUCCESS;
 }
 
