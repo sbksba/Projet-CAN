@@ -22,7 +22,15 @@ int main (int argc, char **argv) {
   insertion(b,c, BAS);
   insertion(c,d, DROITE);
   insertion(b,e, DROITE);
-     
+  insertion(e,f, HAUT);
+  insertion(e,g, GAUCHE);
+
+  /*
+  e->bas = estToujoursVoisinB(e);
+  e->haut = estToujoursVoisinH(e);
+  e->gauche = estToujoursVoisinG(e);
+  e->droite = estToujoursVoisinD(e);
+
   c->bas = estToujoursVoisinB(c);
   c->haut = estToujoursVoisinH(c);
   c->gauche = estToujoursVoisinG(c);
@@ -37,7 +45,8 @@ int main (int argc, char **argv) {
   a->haut = estToujoursVoisinH(a);
   a->gauche = estToujoursVoisinG(a);
   a->droite = estToujoursVoisinD(a);
-  
+  */
+
   /*
   maj(a);
   maj(b);
@@ -45,8 +54,6 @@ int main (int argc, char **argv) {
   maj(d);
   maj(e);
 
-  insertion(e,f, HAUT);
-  insertion(e,g, GAUCHE);
   */
   
   printEspace(a);
@@ -54,13 +61,10 @@ int main (int argc, char **argv) {
   printEspace(c);
   printEspace(d);
   printEspace(e);
-
-  /*
-  printEspace(e);
   printEspace(f);
   printEspace(g);
-  */
   
+
   printf("\nA noeud %d de coordonnées (%d, %d)\n", a->id, a->p->x, a->p->y);
   printListe(a);
   printf("B noeud %d de coordonnées (%d, %d)\n", b->id, b->p->x, b->p->y);
@@ -71,11 +75,12 @@ int main (int argc, char **argv) {
   printListe(d);
   printf("E noeud %d de coordonnées (%d, %d)\n", e->id, e->p->x, e->p->y);
   printListe(e);
+  printf("F noeud %d de coordonnées (%d, %d)\n", f->id, f->p->x, f->p->y);
+  printListe(f);
+  printf("G noeud %d de coordonnées (%d, %d)\n\n", g->id, g->p->x, g->p->y);
+  printListe(g);
 
   /*
-  printf("F noeud %d de coordonnées (%d, %d)\n", f->id, f->p->x, f->p->y);
-  printf("G noeud %d de coordonnées (%d, %d)\n\n", g->id, g->p->x, g->p->y);
-  
   printf("\n");
   printRect(a);
   printRect(b);

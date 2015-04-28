@@ -4,8 +4,6 @@
 /* INSERTION */
 /* ####################################################### */
 
-
-
 /* C'est le noeud qui est dans l'espace qui se découpe qui
    notifie les autres (noeudA ici) */
 void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine)
@@ -69,142 +67,230 @@ void maj(noeud *maj)
 
 void insertD(noeud *cible, noeud *insert)
 {
-  printf("insertD\n");
+  liste_noeud *liste;
+  printf("insertD : #%d\n",insert->id);
   insert->gauche = ajouterNoeud(insert->gauche, cible);
   insert->droite = copieListe(cible->droite);
   insert->haut = copieListe(cible->haut);
   insert->bas = copieListe(cible->bas);
-
-  supprimerListe(cible->droite);
-  cible->droite = ajouterNoeud(cible->droite, insert);
-
-  if (cible->haut != NULL && insert->id != cible->haut->n->id)
+  
+  if (cible->haut != NULL)
     {
-      printf("#%d\n", cible->haut->n->id);
-      printf("H Ajout de %d dans %d\n",insert->id, cible->haut->n->id);
-      cible->haut->n->bas = ajouterNoeud(cible->haut->n->bas, insert);
-    }
-
-  if (cible->bas != NULL && insert->id != cible->bas->n->id)
-    {
-      printListeNoeud(insert->bas);
-      while (insert->bas)
+      liste = copieListe(cible->haut);
+      while(liste)
 	{
-	  printf("\t#%d\n", insert->bas->n->id);
-	  printf("\tB Ajout de %d dans %d\n",insert->id, insert->bas->n->id);
-	  insert->bas->n->haut = ajouterNoeud(insert->bas->n->haut, insert);
-	  printListe(insert->bas->n);
-	  insert->bas = insert->bas->suivant;
+	  printf("H Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->haut->n->bas = ajouterNoeud(liste->n->bas, insert);
+	  liste = liste->suivant;
 	}
-      insert->bas = copieListe(cible->bas);
     }
 
-  if (cible->droite != NULL && insert->id != cible->droite->n->id)
+  if (cible->bas != NULL)
     {
-      printf("#%d\n", cible->droite->n->id);
-      printf("D Ajout de %d dans %d\n",insert->id, cible->droite->n->id);
-      cible->droite->n->gauche = ajouterNoeud(cible->droite->n->gauche, insert);
+      liste = copieListe(cible->bas);
+      while(liste != NULL)
+	{
+	  printf("B Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->bas->n->haut = ajouterNoeud(liste->n->haut, insert);
+	  liste = liste->suivant;
+	}
     }
 
-  if (cible->gauche != NULL && insert->id != cible->gauche->n->id)
+  if (cible->droite != NULL)
     {
-      printf("#%d\n", cible->gauche->n->id);
-      printf("G Ajout de %d dans %d\n",insert->id, cible->gauche->n->id);
-      cible->gauche->n->droite = ajouterNoeud(cible->gauche->n->droite, insert);
+      liste = copieListe(cible->droite);
+      while(liste)
+	{
+	  printf("D Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->droite->n->gauche = ajouterNoeud(liste->n->gauche, insert);
+	  liste = liste->suivant;
+	}
     }
+
+  if (cible->gauche != NULL)
+    {
+      liste = copieListe(cible->gauche);
+      while(liste)
+	{
+	  printf("G Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->gauche->n->droite = ajouterNoeud(liste->n->droite, insert);
+	  liste = liste->suivant;
+	}
+    }
+
+  printf("\n");
+  cible->droite = ajouterNoeud(cible->droite, insert);
 }
 
 void insertG(noeud *cible, noeud *insert)
 {
+  liste_noeud *liste;
+  printf("insertG : #%d\n",insert->id);
   insert->gauche = copieListe(cible->gauche);
   insert->droite = ajouterNoeud(insert->droite, cible);
   insert->haut = copieListe(cible->haut);
   insert->bas = copieListe(cible->bas);
 
-  supprimerListe(cible->gauche);
+  if (cible->haut != NULL)
+    {
+      liste = copieListe(cible->haut);
+      while(liste)
+	{
+	  printf("H Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->haut->n->bas = ajouterNoeud(liste->n->bas, insert);
+	  liste = liste->suivant;
+	}
+    }
+
+  if (cible->bas != NULL)
+    {
+      liste = copieListe(cible->bas);
+      while(liste)
+	{
+	  printf("B Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->bas->n->haut = ajouterNoeud(liste->n->haut, insert);
+	  liste = liste->suivant;
+	}
+    }
+
+  if (cible->droite != NULL)
+    {
+      liste = copieListe(cible->droite);
+      while(liste)
+	{
+	  printf("D Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->droite->n->gauche = ajouterNoeud(liste->n->gauche, insert);
+	  liste = liste->suivant;
+	}
+    }
+
+  if (cible->gauche != NULL)
+    {
+      liste = copieListe(cible->gauche);
+      while(liste)
+	{
+	  printf("G Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->gauche->n->droite = ajouterNoeud(liste->n->droite, insert);
+	  liste = liste->suivant;
+	}
+    }
+
+  printf("\n");
   cible->gauche = ajouterNoeud(cible->gauche, insert);
-
-  if (cible->haut != NULL && insert->id != cible->haut->n->id)
-    {
-      cible->haut->n->bas = ajouterNoeud(cible->haut->n->bas, insert);
-    }
-
-  if (cible->bas != NULL && insert->id != cible->bas->n->id)
-    {
-      cible->bas->n->haut = ajouterNoeud(cible->bas->n->haut, insert);
-    }
-
-  if (cible->droite != NULL && insert->id != cible->droite->n->id)
-    {
-      cible->droite->n->gauche = ajouterNoeud(cible->droite->n->gauche, insert);
-    }
-
-  if (cible->gauche != NULL && insert->id != cible->gauche->n->id)
-    {
-      cible->gauche->n->droite = ajouterNoeud(cible->gauche->n->droite, insert);
-    }
 }
 
 void insertH(noeud *cible, noeud *insert)
 {
+  liste_noeud *liste;
+  printf("insertH : #%d\n",insert->id);
   insert->gauche = copieListe(cible->gauche);
   insert->droite = copieListe(cible->droite);
   insert->haut = copieListe(cible->haut);
   insert->bas = ajouterNoeud(insert->bas, cible);
-
-  supprimerListe(cible->haut);
-  cible->haut = ajouterNoeud(cible->haut, insert);
  
-  if (cible->haut != NULL && insert->id != cible->haut->n->id)
+  if (cible->haut != NULL)
     {
-      cible->haut->n->bas = ajouterNoeud(cible->haut->n->bas, insert);
+      liste = copieListe(cible->haut);
+      while(liste)
+	{
+	  printf("H Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->haut->n->bas = ajouterNoeud(liste->n->bas, insert);
+	  liste = liste->suivant;
+	}
     }
 
-  if (cible->bas != NULL && insert->id != cible->bas->n->id)
+  if (cible->bas != NULL)
     {
-      cible->bas->n->haut = ajouterNoeud(cible->bas->n->haut, insert);
+      liste = copieListe(cible->bas);
+      while(liste)
+	{
+	  printf("B Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->bas->n->haut = ajouterNoeud(liste->n->haut, insert);
+	  liste = liste->suivant;
+	}
     }
 
-  if (cible->droite != NULL && insert->id != cible->droite->n->id)
+  if (cible->droite != NULL)
     {
-      cible->droite->n->gauche = ajouterNoeud(cible->droite->n->gauche, insert);
+      liste = copieListe(cible->droite);
+      while(liste)
+	{
+	  printf("D Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->droite->n->gauche = ajouterNoeud(liste->n->gauche, insert);
+	  liste = liste->suivant;
+	}
     }
 
-  if (cible->gauche != NULL && insert->id != cible->gauche->n->id)
+  if (cible->gauche != NULL)
     {
-      cible->gauche->n->droite = ajouterNoeud(cible->gauche->n->droite, insert);
+      liste = copieListe(cible->gauche);
+      while(liste)
+	{
+	  printf("G Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->gauche->n->droite = ajouterNoeud(liste->n->droite, insert);
+	  liste = liste->suivant;
+	}
     }
+
+  printf("\n");
+  cible->haut = ajouterNoeud(cible->haut, insert);
 }
 
 void insertB(noeud *cible, noeud *insert)
 {
+  liste_noeud *liste;
+  printf("insertB : #%d\n",insert->id);
   insert->gauche = copieListe(cible->gauche);
   insert->droite = copieListe(cible->droite);
   insert->haut = ajouterNoeud(insert->haut, cible);
   insert->bas = copieListe(cible->bas);
   
-  supprimerListe(cible->bas);
+  if (cible->haut != NULL)
+    {
+      liste = copieListe(cible->haut);
+      while(liste)
+	{
+	  printf("H Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->haut->n->bas = ajouterNoeud(liste->n->bas, insert);
+	  liste = liste->suivant;
+	}
+    }
+
+  if (cible->bas != NULL)
+    {
+      liste = copieListe(cible->bas);
+      while(liste)
+	{
+	  printf("B Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->bas->n->haut = ajouterNoeud(liste->n->haut, insert);
+	  liste = liste->suivant;
+	}
+    }
+
+  if (cible->droite != NULL)
+    {
+      liste = copieListe(cible->droite);
+      while(liste)
+	{
+	  printf("D Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->droite->n->gauche = ajouterNoeud(liste->n->gauche, insert);
+	  liste = liste->suivant;
+	}
+    }
+
+  if (cible->gauche != NULL)
+    {
+      liste = copieListe(cible->gauche);
+      while(liste)
+	{
+	  printf("G Ajout de %d dans %d\n",insert->id, liste->n->id);
+	  cible->gauche->n->droite = ajouterNoeud(liste->n->droite, insert);
+	  liste = liste->suivant;
+	}
+    }
+
+  printf("\n");
   cible->bas = ajouterNoeud(cible->bas, insert);
- 
-  if (cible->haut != NULL && insert->id != cible->haut->n->id)
-    {
-      cible->haut->n->bas = ajouterNoeud(cible->haut->n->bas, insert);
-    }
-
-  if (cible->bas != NULL && insert->id != cible->bas->n->id)
-    {
-      cible->bas->n->haut = ajouterNoeud(cible->bas->n->haut, insert);
-    }
-
-  if (cible->droite != NULL && insert->id != cible->droite->n->id)
-    {
-      cible->droite->n->gauche = ajouterNoeud(cible->droite->n->gauche, insert);
-    }
-
-  if (cible->gauche != NULL && insert->id != cible->gauche->n->id)
-    {
-      cible->gauche->n->droite = ajouterNoeud(cible->gauche->n->droite, insert);
-    }
 }
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -216,8 +302,6 @@ void insertion(noeud *cible, noeud *insert, int dir)
   espace *esNoeud = decoupe(cible);
   insert = attributionEspace(insert, esNoeud);
   aleatoireDansEspace(esNoeud, insert);
-  
-  printf("dir : %d\n",dir);
   
   switch(dir)
     {
