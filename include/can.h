@@ -62,24 +62,8 @@ point *alea(int a, int b);
 /* NOEUD */
 noeud *initNoeud(int id);
 
-/* LISTE */
-liste_noeud *nouvelleListe(noeud *noeud, liste_noeud *l);
-liste_noeud *ajouterNoeud(liste_noeud *liste, noeud *n);
-liste_noeud *supprimerNoeud(liste_noeud *liste, noeud *n);
-liste_noeud *copieListe(liste_noeud *liste);
-
-/* INSERTION */
-int maxEspace(espace *es);
-int estDansEspace(espace *es, noeud *b);
-espace *decoupe(noeud *a);
-void aleatoireDansEspace (espace *espace, noeud *noeud);
-int appartient(point m, point a, point b);
-int estDansSegment(noeud *source, noeud *cible, int sens);
-void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine);
-
 /* MPI */
 int envoyer(int id_recepteur, int type, int message, int id_emetteur);
 int recevoir(int id_recepteur, int type, int message, int id_emetteur);
-
 
 #endif //__CAN_H_

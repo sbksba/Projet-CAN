@@ -1,5 +1,6 @@
 CC=gcc
 CFLAGS=-Wall
+LDFLAGS=-L $(LIB) -lcanP2P -lrt
 BIN=bin
 INC=include
 LIB=lib
@@ -28,19 +29,31 @@ ${LOG}:
 # OBJET
 # =====
 ${OBJ}/can.o: ${SRC}/can.c
-	${CC} -c -o $@ $< $(CFLAGS) -I${INC} -lrt
+	${CC} -c -o $@ $< $(CFLAGS) -I${INC}
+
+${OBJ}/canListe.o: ${SRC}/canListe.c
+	${CC} -c -o $@ $< $(CFLAGS) -I${INC}
+
+${OBJ}/canEspace.o: ${SRC}/canEspace.c
+	${CC} -c -o $@ $< $(CFLAGS) -I${INC}
+
+${OBJ}/canInsert.o: ${SRC}/canInsert.c
+	${CC} -c -o $@ $< $(CFLAGS) -I${INC}
+
+${OBJ}/main.o: ${SRC}/main.c
+	${CC} -c -o $@ $< $(CFLAGS) -I${INC}
 
 # ============
 # BIBLIOTHEQUE
 # ============
-${LIB}/libcanP2P.a : ${OBJ}/can.o
+${LIB}/libcanP2P.a : ${OBJ}/can.o ${OBJ}/canListe.o ${OBJ}/canEspace.o ${OBJ}/canInsert.o
 	ar -rs $@ $^
 
 # ==========
 # EXECUTABLE
 # ==========
-$(EXEC): ${LIB}/libcanP2P.a
-	${CC} -o ${BIN}/$@ $^ -lrt
+$(EXEC): ${LIB}/libcanP2P.a ${OBJ}/main.o
+	${CC} -o ${BIN}/$@ $^ ${LDFLAGS}
 
 .PHONY: all proper clean cleanall
 
