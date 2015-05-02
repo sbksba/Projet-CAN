@@ -3,6 +3,7 @@
 
 Projet CAN
 
+Nous avons un problème sur l'insertion, ce qui provoque une erreur de segmentation emp\^echant le programme de fonctionner correctement.
 
 ## Licence
 
