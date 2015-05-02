@@ -8,7 +8,7 @@
 #include <mpi.h>
 
 #define COORD_MIN 0
-#define COORD_MAX 20
+#define COORD_MAX 1000
 
 #define SIZE_NOEUD  11
 

@@ -57,9 +57,12 @@ void makeNode(int rang, int nb_proc)
       envoyer(COORDINATEUR, TAG_AYAI);
 
       //Je peux recevoir des requêtes à tout moment...
-      /*MPI_Recv(&msg, 1, MPI_INT, MPI_ANY_SOURCE, TAG_ESPACE, MPI_COMM_WORLD, &status);
-	noeud *insert = recevoirNoeud(TAG_ESPACE);
-	insertion(n, insert);*/
+      while(TRUE)
+	{
+	  MPI_Recv(&msg, 1, MPI_INT, MPI_ANY_SOURCE, TAG_ESPACE, MPI_COMM_WORLD, &status);
+	  noeud *insert = recevoirNoeud(TAG_ESPACE);
+	  insertion(n, insert);
+	}
     }
 }
 
