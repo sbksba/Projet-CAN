@@ -1,103 +1,121 @@
 #include "canInsert.h"
 
-int main (int argc, char **argv) {
+void coordinateur (int nb_proc)
+{
+  int i, msg;
+  MPI_Status status;
+  for (i=1; i<nb_proc; i++)
+    {
+      envoyer(i, TAG_INSERS_TOI);
+      printf("[COORD] #%d, insère toi !\n",i);
+      if (recevoir(i, TAG_AYAI) != 0)
+	printf("#%d erreur ayai\n",i);
+      printf("[COORD] #%d est inséré.\n", i);
+    }
+}
 
-  noeud *a = initNoeud(1);
-  noeud *b = initNoeud(2);
-  noeud *c = initNoeud(3);
-  noeud *d = initNoeud(4);
-  noeud *e = initNoeud(5);
-  noeud *f = initNoeud(6);
-  noeud *g = initNoeud(7);
+void makeNode(int rang, int nb_proc)
+{
+  noeud *n = initNoeud(rang);
+  printf("Je suis #%d\n",rang);
+  recevoir(COORDINATEUR, TAG_INSERS_TOI);
+  printf("%d a reçu le 'insère toi !'\n", rang);
 
-  a->p->x = 2;  a->p->y = 15;
-  b->p->x = 14; b->p->y = 18;
-  c->p->x = 12; c->p->y = 2;
-  d->p->x = 19; d->p->y = 3;
-  e->p->x = 19; e->p->y = 11;
-  f->p->x = 17; f->p->y = 16;
-  g->p->x = 17; g->p->y = 11;
+  if (rang == BOOTSTRAP)
+    {
+      envoyer(COORDINATEUR, TAG_AYAI);
+      printf("[BOOT]\n");
+      int i;
+      for (i = 2; i < nb_proc; i++)
+	{
+	  printf("[NODE] %d\n", i);
+	  noeud *insert = recevoirNoeud(TAG_ESPACE);
+	  insertion(n, insert);
+	}
+    }
+  else
+    {
+      int msg;
+      MPI_Status status;
+      printf("MAKE #%d (%d, %d)\n",n->id,n->p->x, n->p->y);
+      printf("#%d envoi TAG_ESPACE\n", rang);
+
+      //Suis-je dans ton espace ?
+      envoyerNoeud(BOOTSTRAP, TAG_ESPACE, n);
+
+      //Je reçois mon nouvel espace
+      n = recevoirNoeud(TAG_NOEUD);
+      printf("N : #%d (%d, %d)\n", n->id, n->p->x, n->p->y);
+
+      //Je reçois mes voisins
+      /*recevoirVoisins(n);*/
+
+      //Je reçois que je suis inséré
+      MPI_Recv(&msg, 1, MPI_INT, MPI_ANY_SOURCE, TAG_TOI_INSERE, MPI_COMM_WORLD, &status);
+
+      //Je dis au coordinateur que je suis inséré
+      envoyer(COORDINATEUR, TAG_AYAI);
+
+      //Je peux recevoir des requêtes à tout moment...
+      /*MPI_Recv(&msg, 1, MPI_INT, MPI_ANY_SOURCE, TAG_ESPACE, MPI_COMM_WORLD, &status);
+	noeud *insert = recevoirNoeud(TAG_ESPACE);
+	insertion(n, insert);*/
+    }
+}
+
+int main (int argc, char **argv)
+{
+  int nb_proc, rang;
   
-  insertion(a,b, DROITE);
-  insertion(b,c, BAS);
-  insertion(c,d, DROITE);
-  insertion(b,e, DROITE);
-  insertion(e,f, HAUT);
-  insertion(e,g, GAUCHE);
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &nb_proc);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rang);
+
+  if (nb_proc < N+1)
+    {
+      printf("Nombre de processus incorrect !\n");
+      MPI_Finalize();
+      exit(2);
+    }
+
+  if (rang == 0)
+    {
+      coordinateur(nb_proc);
+    }
+  else
+    {
+      makeNode(rang, nb_proc); 	
+    }
+
+  if (rang == 0)
+    printf("FIN COORDINATEUR\n");
+  else if (rang == 1)
+    printf("FIN BOOTSTRAP\n");
+  else
+    printf("FIN #%d\n",rang);
+
+  MPI_Finalize();
 
   /*
-  e->bas = estToujoursVoisinB(e);
-  e->haut = estToujoursVoisinH(e);
-  e->gauche = estToujoursVoisinG(e);
-  e->droite = estToujoursVoisinD(e);
-
-  c->bas = estToujoursVoisinB(c);
-  c->haut = estToujoursVoisinH(c);
-  c->gauche = estToujoursVoisinG(c);
-  c->droite = estToujoursVoisinD(c);
-
-  b->bas = estToujoursVoisinB(b);
-  b->haut = estToujoursVoisinH(b);
-  b->gauche = estToujoursVoisinG(b);
-  b->droite = estToujoursVoisinD(b);
-
-  a->bas = estToujoursVoisinB(a);
-  a->haut = estToujoursVoisinH(a);
-  a->gauche = estToujoursVoisinG(a);
-  a->droite = estToujoursVoisinD(a);
-  */
-
-  /*
-  maj(a);
-  maj(b);
-  maj(c);
-  maj(d);
-  maj(e);
-
+    printf("\n");
+    printRect(a);
+    printRect(b);
+    printRect(c);
+    printRect(d);
+    printRect(e);
+    printRect(f);
+    printRect(g);
+    
+    printf("%d %d A\n", a->p->x, a->p->y);
+    printf("%d %d B\n", b->p->x, b->p->y);
+    printf("%d %d C\n", c->p->x, c->p->y);
+    printf("%d %d D\n", d->p->x, d->p->y);
+    printf("%d %d E\n", e->p->x, e->p->y);
+    printf("%d %d F\n", f->p->x, f->p->y);
+    printf("%d %d G\n", g->p->x, g->p->y);
   */
   
-  printEspace(a);
-  printEspace(b);
-  printEspace(c);
-  printEspace(d);
-  printEspace(e);
-  printEspace(f);
-  printEspace(g);
-  
 
-  printf("\nA noeud %d de coordonnées (%d, %d)\n", a->id, a->p->x, a->p->y);
-  printListe(a);
-  printf("B noeud %d de coordonnées (%d, %d)\n", b->id, b->p->x, b->p->y);
-  printListe(b);
-  printf("C noeud %d de coordonnées (%d, %d)\n", c->id, c->p->x, c->p->y);
-  printListe(c);
-  printf("D noeud %d de coordonnées (%d, %d)\n", d->id, d->p->x, d->p->y);
-  printListe(d);
-  printf("E noeud %d de coordonnées (%d, %d)\n", e->id, e->p->x, e->p->y);
-  printListe(e);
-  printf("F noeud %d de coordonnées (%d, %d)\n", f->id, f->p->x, f->p->y);
-  printListe(f);
-  printf("G noeud %d de coordonnées (%d, %d)\n\n", g->id, g->p->x, g->p->y);
-  printListe(g);
-
-  /*
-  printf("\n");
-  printRect(a);
-  printRect(b);
-  printRect(c);
-  printRect(d);
-  printRect(e);
-  printRect(f);
-  printRect(g);
-  
-  printf("%d %d A\n", a->p->x, a->p->y);
-  printf("%d %d B\n", b->p->x, b->p->y);
-  printf("%d %d C\n", c->p->x, c->p->y);
-  printf("%d %d D\n", d->p->x, d->p->y);
-  printf("%d %d E\n", e->p->x, e->p->y);
-  printf("%d %d F\n", f->p->x, f->p->y);
-  printf("%d %d G\n", g->p->x, g->p->y);
-  */
   return EXIT_SUCCESS;
 }
 

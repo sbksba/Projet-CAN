@@ -231,8 +231,7 @@ int estDansSegment(noeud *source, noeud *cible, int sens)
 liste_noeud *estToujoursVoisinB(noeud *noeud)
 {
   liste_noeud *liste = copieListe(noeud->bas);
-  printListe(noeud);
-  
+    
   //Pour tous les voisins bas de noeud
   while(liste)
     {

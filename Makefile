@@ -1,4 +1,4 @@
-CC=gcc
+CC=mpicc
 CFLAGS=-Wall
 LDFLAGS=-L $(LIB) -lcanP2P -lrt
 BIN=bin
@@ -64,4 +64,4 @@ clean: proper
 	rm -f ${OBJ}/* ${BIN}/* ${LIB}/*
 
 cleanall: clean
-	rm -r ${OBJ} ${BIN} ${LIB}
+	rm -rf ${OBJ} ${BIN} ${LIB}

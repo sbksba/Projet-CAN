@@ -1,330 +1,211 @@
 #include "canInsert.h"
 
 /* ####################################################### */
+/* PRIMITIVES MPI */
+/* ####################################################### */
+
+int sizeList(liste_noeud *liste)
+{
+  int size=0;
+  liste_noeud *l = liste;
+  while(l != NULL)
+    {
+      size++;
+      l = l->suivant;
+    }
+  free(l);
+  return size;
+}
+
+/* Convertit un noeud sous forme d'un tableau pour l'envoi */
+int *convertirNoeud(noeud *noeud)
+{
+  int *tab = malloc(sizeof(int)*SIZE_NOEUD);
+  tab[0]  = noeud->id;
+  tab[1]  = noeud->p->x;
+  tab[2]  = noeud->p->y;
+  tab[3]  = noeud->es->a.x;
+  tab[4]  = noeud->es->a.y;
+  tab[5]  = noeud->es->ap.x;
+  tab[6]  = noeud->es->ap.y;
+  tab[7]  = noeud->es->b.x;
+  tab[8]  = noeud->es->b.y;
+  tab[9]  = noeud->es->bp.x;
+  tab[10] = noeud->es->bp.y;
+
+  return tab;
+}
+
+/* Convertit un tableau en un noeud pour la reception */
+noeud *convertirTab(int *tab)
+{
+  noeud *noeud    = initNoeud(tab[0]);
+  noeud->p->x     = tab[1];
+  noeud->p->y     = tab[2];
+  noeud->es->a.x  = tab[3];
+  noeud->es->a.y  = tab[4];
+  noeud->es->ap.x = tab[5];
+  noeud->es->ap.y = tab[6];
+  noeud->es->b.x  = tab[7];
+  noeud->es->b.y  = tab[8];
+  noeud->es->bp.x = tab[9];
+  noeud->es->bp.y = tab[10];
+
+  return noeud;
+}
+
+int envoyer(int id_destinataire, int tag)
+{
+  int msg = 0;
+  return MPI_Send(&msg, 1, MPI_INT, id_destinataire, tag, MPI_COMM_WORLD);
+}
+
+int recevoir(int emetteur, int tag)
+{
+  int msg;
+  MPI_Status status;
+  return MPI_Recv(&msg, 1, MPI_INT, emetteur, tag, MPI_COMM_WORLD, &status);
+}
+
+int envoyerNoeud(int id_destinataire, int tag, noeud * noeud)
+{
+  int *tabNoeud = convertirNoeud(noeud);
+  return MPI_Send(tabNoeud, SIZE_NOEUD, MPI_INT, id_destinataire, tag, MPI_COMM_WORLD);
+}
+
+noeud *recevoirNoeud(int tag)
+{
+  int *msg = malloc(sizeof(int)*SIZE_NOEUD);
+  MPI_Status status;
+
+  MPI_Recv(msg, SIZE_NOEUD, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+  noeud *n = convertirTab(msg);
+  //Appel des fonctions d'insertion
+  return n;
+}
+
+int envoyerVoisins(int id_destinataire, noeud *emetteur)
+{
+  envoyer(id_destinataire, DEB);
+  
+  while(emetteur->haut != NULL)
+    {
+      envoyerNoeud(id_destinataire, TAG_VOIS_HAUT,emetteur->haut->n);
+      emetteur->haut = emetteur->haut->suivant;
+    }
+  
+  while(emetteur->bas != NULL)
+    {
+      envoyerNoeud(id_destinataire, TAG_VOIS_BAS,emetteur->bas->n);
+      emetteur->bas = emetteur->bas->suivant;
+    }
+  
+  while(emetteur->gauche != NULL)
+    {
+      envoyerNoeud(id_destinataire, TAG_VOIS_GAUCHE,emetteur->gauche->n);
+      emetteur->gauche = emetteur->gauche->suivant;
+    }
+
+  while(emetteur->droite != NULL)
+    {
+      envoyerNoeud(id_destinataire, TAG_VOIS_DROITE,emetteur->droite->n);
+      emetteur->droite = emetteur->droite->suivant;
+    }
+  
+  envoyer(id_destinataire, FIN);
+
+  return EXIT_SUCCESS;
+}
+
+int recevoirVoisins(noeud *destinataire)
+{
+  MPI_Status status;
+  int *msg = malloc(sizeof(int)*SIZE_NOEUD);
+  MPI_Recv(msg, 1 , MPI_INT, MPI_ANY_SOURCE, DEB, MPI_COMM_WORLD, &status);
+  
+  while (status.MPI_TAG != FIN)
+    {
+      MPI_Recv(msg, SIZE_NOEUD, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+      noeud *n = convertirTab(msg);
+
+      if (status.MPI_TAG == TAG_VOIS_HAUT)
+	destinataire->haut = ajouterNoeud(destinataire->haut, n);
+      
+      if (status.MPI_TAG == TAG_VOIS_BAS)
+	destinataire->bas = ajouterNoeud(destinataire->bas, n);
+
+      if (status.MPI_TAG == TAG_VOIS_GAUCHE)
+	destinataire->gauche = ajouterNoeud(destinataire->gauche, n);
+
+      if (status.MPI_TAG == TAG_VOIS_DROITE)
+	destinataire->droite = ajouterNoeud(destinataire->droite, n);
+    }
+  
+  return EXIT_SUCCESS;
+}
+
+/* ####################################################### */
 /* INSERTION */
 /* ####################################################### */
 
 /* C'est le noeud qui est dans l'espace qui se découpe qui
    notifie les autres (noeudA ici) */
-void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine)
-{
-  /* B est a droite*/
-  if (noeudA->es->a.x == origine->a.x)
-    {
-      noeudB->droite = noeudA->droite;
-      noeudB->haut = noeudA->haut;
-      noeudB->bas = noeudA->bas;
-      ajouterNoeud(noeudB->gauche, noeudA);
-      ajouterNoeud(noeudA->droite, noeudB);
-
-      //Pour tous les voisins droits de A
-      while (noeudA->droite != NULL)
-	{
-	  //On ajoute B dans leur liste de voisins gauches
-	  ajouterNoeud(noeudA->droite->n->gauche, noeudB);
-	  noeudA->droite = noeudA->droite->suivant;
-	  //On supprime A de leur liste de voisins gauches
-          supprimerNoeud(noeudB->droite->n->gauche, noeudA);
-	}
-    }
-  /* B est a gauche*/
-  else if (noeudA->es->a.x > origine->a.x)
-    {
-      noeudB->gauche = noeudA->gauche;
-      noeudB->haut = noeudA->haut;
-      noeudB->bas = noeudA->bas;
-      ajouterNoeud(noeudB->droite, noeudA);
-      ajouterNoeud(noeudA->gauche, noeudB);
-
-      //Pour tous les voisins gauches de A
-      while (noeudA->gauche != NULL)
-	{
-	  //On ajoute B dans leur liste de voisins droits
-	  ajouterNoeud(noeudA->gauche->n->droite, noeudB);
-	  noeudA->droite = noeudA->droite->suivant;
-	  //On supprime A de leur liste de voisins droits
-          supprimerNoeud(noeudB->gauche->n->droite, noeudA);
-	}
-    }
-  /* B est en bas*/
-  else if (noeudA->es->a.y == origine->a.y)
-    {
-      
-    }
-  /* B est en haut*/
-  else
-    {
-    }
-}
-
-void maj(noeud *maj)
-{
-  maj->bas    = estToujoursVoisinB(maj);
-  maj->haut   = estToujoursVoisinH(maj);
-  maj->droite = estToujoursVoisinD(maj);
-  maj->gauche = estToujoursVoisinG(maj);;
-}
-
-void insertD(noeud *cible, noeud *insert)
-{
-  liste_noeud *liste;
-  printf("insertD : #%d\n",insert->id);
-  insert->gauche = ajouterNoeud(insert->gauche, cible);
-  insert->droite = copieListe(cible->droite);
-  insert->haut = copieListe(cible->haut);
-  insert->bas = copieListe(cible->bas);
-  
-  if (cible->haut != NULL)
-    {
-      liste = copieListe(cible->haut);
-      while(liste)
-	{
-	  printf("H Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->haut->n->bas = ajouterNoeud(liste->n->bas, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->bas != NULL)
-    {
-      liste = copieListe(cible->bas);
-      while(liste != NULL)
-	{
-	  printf("B Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->bas->n->haut = ajouterNoeud(liste->n->haut, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->droite != NULL)
-    {
-      liste = copieListe(cible->droite);
-      while(liste)
-	{
-	  printf("D Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->droite->n->gauche = ajouterNoeud(liste->n->gauche, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->gauche != NULL)
-    {
-      liste = copieListe(cible->gauche);
-      while(liste)
-	{
-	  printf("G Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->gauche->n->droite = ajouterNoeud(liste->n->droite, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  printf("\n");
-  cible->droite = ajouterNoeud(cible->droite, insert);
-}
-
-void insertG(noeud *cible, noeud *insert)
-{
-  liste_noeud *liste;
-  printf("insertG : #%d\n",insert->id);
-  insert->gauche = copieListe(cible->gauche);
-  insert->droite = ajouterNoeud(insert->droite, cible);
-  insert->haut = copieListe(cible->haut);
-  insert->bas = copieListe(cible->bas);
-
-  if (cible->haut != NULL)
-    {
-      liste = copieListe(cible->haut);
-      while(liste)
-	{
-	  printf("H Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->haut->n->bas = ajouterNoeud(liste->n->bas, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->bas != NULL)
-    {
-      liste = copieListe(cible->bas);
-      while(liste)
-	{
-	  printf("B Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->bas->n->haut = ajouterNoeud(liste->n->haut, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->droite != NULL)
-    {
-      liste = copieListe(cible->droite);
-      while(liste)
-	{
-	  printf("D Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->droite->n->gauche = ajouterNoeud(liste->n->gauche, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->gauche != NULL)
-    {
-      liste = copieListe(cible->gauche);
-      while(liste)
-	{
-	  printf("G Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->gauche->n->droite = ajouterNoeud(liste->n->droite, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  printf("\n");
-  cible->gauche = ajouterNoeud(cible->gauche, insert);
-}
-
-void insertH(noeud *cible, noeud *insert)
-{
-  liste_noeud *liste;
-  printf("insertH : #%d\n",insert->id);
-  insert->gauche = copieListe(cible->gauche);
-  insert->droite = copieListe(cible->droite);
-  insert->haut = copieListe(cible->haut);
-  insert->bas = ajouterNoeud(insert->bas, cible);
- 
-  if (cible->haut != NULL)
-    {
-      liste = copieListe(cible->haut);
-      while(liste)
-	{
-	  printf("H Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->haut->n->bas = ajouterNoeud(liste->n->bas, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->bas != NULL)
-    {
-      liste = copieListe(cible->bas);
-      while(liste)
-	{
-	  printf("B Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->bas->n->haut = ajouterNoeud(liste->n->haut, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->droite != NULL)
-    {
-      liste = copieListe(cible->droite);
-      while(liste)
-	{
-	  printf("D Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->droite->n->gauche = ajouterNoeud(liste->n->gauche, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->gauche != NULL)
-    {
-      liste = copieListe(cible->gauche);
-      while(liste)
-	{
-	  printf("G Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->gauche->n->droite = ajouterNoeud(liste->n->droite, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  printf("\n");
-  cible->haut = ajouterNoeud(cible->haut, insert);
-}
-
-void insertB(noeud *cible, noeud *insert)
-{
-  liste_noeud *liste;
-  printf("insertB : #%d\n",insert->id);
-  insert->gauche = copieListe(cible->gauche);
-  insert->droite = copieListe(cible->droite);
-  insert->haut = ajouterNoeud(insert->haut, cible);
-  insert->bas = copieListe(cible->bas);
-  
-  if (cible->haut != NULL)
-    {
-      liste = copieListe(cible->haut);
-      while(liste)
-	{
-	  printf("H Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->haut->n->bas = ajouterNoeud(liste->n->bas, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->bas != NULL)
-    {
-      liste = copieListe(cible->bas);
-      while(liste)
-	{
-	  printf("B Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->bas->n->haut = ajouterNoeud(liste->n->haut, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->droite != NULL)
-    {
-      liste = copieListe(cible->droite);
-      while(liste)
-	{
-	  printf("D Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->droite->n->gauche = ajouterNoeud(liste->n->gauche, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  if (cible->gauche != NULL)
-    {
-      liste = copieListe(cible->gauche);
-      while(liste)
-	{
-	  printf("G Ajout de %d dans %d\n",insert->id, liste->n->id);
-	  cible->gauche->n->droite = ajouterNoeud(liste->n->droite, insert);
-	  liste = liste->suivant;
-	}
-    }
-
-  printf("\n");
-  cible->bas = ajouterNoeud(cible->bas, insert);
-}
+void majVoisins(noeud *noeudA, noeud *noeudB, espace *origine){}
+void maj(noeud *maj){}
+void insertD(noeud *cible, noeud *insert){}
+void insertG(noeud *cible, noeud *insert){}
+void insertH(noeud *cible, noeud *insert){}
+void insertB(noeud *cible, noeud *insert){}
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  * Insert un noeud dans la zone du noeud cible.
  * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  */
-void insertion(noeud *cible, noeud *insert, int dir)
+void insertion(noeud *cible, noeud *insert)
 {
-  espace *esNoeud = decoupe(cible);
-  insert = attributionEspace(insert, esNoeud);
-  aleatoireDansEspace(esNoeud, insert);
-  
-  switch(dir)
+  /* Si le noeud qui veut s'insérer est dans mon espace,
+     je découpe cet espace,
+     je lui affecte "localement", puis je lui envoie
+     je lui envoie tous mes voisins
+     je mets à jour mes voisins
+     je lui confirme qu'il est inséré.
+   */
+  if (estDansEspace(cible->es, insert) == TRUE)
     {
-    case DROITE:
-      /* Insertion du noeud a la droite de la cible */
-      insertD(cible, insert);
+      espace *esNoeud = decoupe(cible);
+      insert = attributionEspace(insert, esNoeud);
+      aleatoireDansEspace(esNoeud, insert);
+      printf("ATTRIBUTION : #%d (%d, %d)\n",insert->id,insert->p->x,insert->p->y);
       
-      break;
-    case GAUCHE:
-      /* Insertion du noeud a la gauche de la cible */
-      insertG(cible, insert);
-      
-      break;
-    case HAUT:
-      /* Insertion du noeud en haut de la cible */
-      insertH(cible, insert);
-      
-      break;
-    case BAS:
-      /* Insertion du noeud en bas de la cible */
-      insertB(cible, insert);
-      
-      break;
+      envoyerNoeud(insert->id, TAG_NOEUD, insert);
+      /*
+      envoyerVoisins(insert->id, cible);
+
+      cible->haut = estToujoursVoisinH(cible);
+      cible->bas = estToujoursVoisinB(cible);
+      cible->gauche = estToujoursVoisinG(cible);
+      cible->droite = estToujoursVoisinD(cible);
+      */
+
+      envoyer(insert->id, TAG_TOI_INSERE);
+    }
+
+  /* Si le noeud qui veut s'insérer n'est pas dans mon espace, 
+     Je cherche la direction vers qui envoyer,
+     J'envoie la requête de ce noeud dans cette direction.
+   */
+  else
+    {
+      int dir = direction(cible, insert);
+      printf("DIR %d\n",dir);
+      if (dir == HAUT)
+	envoyerNoeud(cible->haut->n->id, TAG_ESPACE, insert);
+      else if (dir == BAS)
+	envoyerNoeud(cible->bas->n->id, TAG_ESPACE, insert);
+      else if (dir == GAUCHE)
+	envoyerNoeud(cible->gauche->n->id, TAG_ESPACE, insert);
+      else if (dir == DROITE)
+	envoyerNoeud(cible->droite->n->id, TAG_ESPACE, insert);
     }
 }
 
@@ -338,26 +219,63 @@ void insertion(noeud *cible, noeud *insert, int dir)
  */
 int direction(noeud *courant, noeud *recherche)
 {
-  int tab[2];
-  if (courant->p->x < recherche->p->x && courant->droite != NULL)
-    {
-      tab[0] = DROITE;
-    }
-  else if (courant->p->x > recherche->p->x && courant->gauche != NULL)
-    {
-      tab[0] = GAUCHE;
-    }
+  int choix;
+
+  printf("\tC(%d,%d) et R(%d,%d)\n",courant->p->x,courant->p->y,recherche->p->x,recherche->p->y);
   
-  if (courant->p->y < recherche->p->y && courant->haut != NULL)
+  if (recherche->p->x > courant->p->x &&
+      recherche->p->y == courant->p->y)
+    return DROITE;
+  
+  if (recherche->p->x < courant->p->x &&
+      recherche->p->y == courant->p->y)
+    return GAUCHE;
+
+  if (recherche->p->x == courant->p->x &&
+      recherche->p->y > courant->p->y)
+    return HAUT;
+
+  if (recherche->p->x == courant->p->x &&
+      recherche->p->y < courant->p->y)
+    return BAS;
+
+  /*si noeud recherche est en haut a droite*/
+  if (recherche->p->x > courant->p->x &&
+      recherche->p->y > courant->p->y)
     {
-      tab[1] = HAUT;
+      if ((choix = aleatoire(0, 1)) == 0)
+	return DROITE;
+      return HAUT;
     }
-  else if (courant->p->y > recherche->p->y && courant->bas != NULL)
+    
+  /*si noeud recherche est en haut a gauche*/
+  if (recherche->p->x < courant->p->x &&
+      recherche->p->y > courant->p->y)
     {
-      tab[1] = BAS;
+      if ((choix = aleatoire(0, 1)) == 0)
+	return GAUCHE;
+      return HAUT;
+    }
+    
+  /*si noeud recherche est en bas a droite*/
+  if (recherche->p->x > courant->p->x &&
+      recherche->p->y < courant->p->y)
+    {
+      if ((choix = aleatoire(0, 1)) == 0)
+	return DROITE;
+      return BAS;
+    }
+    
+  /*si noeud recherche est en bas a gauche*/
+  if (recherche->p->x < courant->p->x &&
+      recherche->p->y < courant->p->y)
+    {
+      if ((choix = aleatoire(0, 1)) == 0)
+	return GAUCHE;
+      return BAS;
     }
 
-  return tab[aleatoire(0,1)];
+  return EXIT_FAILURE;
 }
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -365,7 +283,7 @@ int direction(noeud *courant, noeud *recherche)
  * Retourne FALSE sinon.
  * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  */
-int recherche (noeud *noeud)
+int recherche (noeud *noeud, int tag)
 {
   
   return FALSE;

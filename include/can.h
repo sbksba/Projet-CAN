@@ -10,6 +10,8 @@
 #define COORD_MIN 0
 #define COORD_MAX 20
 
+#define SIZE_NOEUD  11
+
 #define HAUT   0
 #define BAS    1
 #define GAUCHE 2
@@ -21,8 +23,21 @@
 #define TRUE  1
 #define FALSE 0
 
-#define N         5
-#define BOOTSTRAP 1
+#define N            2
+#define BOOTSTRAP    1
+#define COORDINATEUR 0
+
+#define TAG_INSERS_TOI  50
+#define TAG_ESPACE      51
+#define TAG_AYAI        52 /* ... JE SUIS DEDANS */
+#define TAG_TOI_INSERE  53
+#define TAG_VOIS_BAS    54
+#define TAG_VOIS_HAUT   55
+#define TAG_VOIS_GAUCHE 56
+#define TAG_VOIS_DROITE 57
+#define TAG_NOEUD       58
+#define DEB             59
+#define FIN             60
 
 typedef struct _point {
   int x;
@@ -61,9 +76,5 @@ point *alea(int a, int b);
 
 /* NOEUD */
 noeud *initNoeud(int id);
-
-/* MPI */
-int envoyer(int id_recepteur, int type, int message, int id_emetteur);
-int recevoir(int id_recepteur, int type, int message, int id_emetteur);
 
 #endif //__CAN_H_
